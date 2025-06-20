@@ -1,0 +1,20 @@
+[project]
+name = "llama-stack-provider-ragas"
+version = "0.1.0"
+description = "Ragas evaluation as an out-of-tree Llama Stack provider"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-stack",
+    "ragas",
+]
+
+[project.optional-dependencies]
+distro = ["opentelemetry-api", "opentelemetry-exporter-otlp", "aiosqlite", "ollama", "uvicorn"]
+dev = ["pytest", "pytest-cov", "black", "isort", "ipykernel", "rich"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_paths = ["src"]
+addopts = "-v" 
