@@ -1,4 +1,6 @@
+import contextlib
 import logging
+from io import StringIO
 from typing import Any, Dict, List, Optional, Union
 
 from datasets import Dataset
@@ -23,12 +25,50 @@ from ragas.metrics import (
     faithfulness,
 )
 from ragas.run_config import RunConfig
+from rich.console import Console
+from rich.errors import NotRenderableError
+from rich.table import Table
 
 from .config import RagasEvalProviderConfig
 from .errors import RagasConfigError, RagasDatasetError, RagasEvaluationError
 from .utils import LlamaStackEmbeddingsWrapper, LlamaStackLLMWrapper
 
 logger = logging.getLogger(__name__)
+
+
+def _render_dataframe_as_table(df, title="Evaluation Results") -> str:
+    """Render dataframe as a rich table for logging.
+
+    Args:
+        df: pandas DataFrame to render
+        title: Title for the table
+
+    Returns:
+        String representation of the rich table
+    """
+    # TODO: move this into another module
+    # Create a console that writes to a string buffer
+    string_buffer = StringIO()
+    console = Console(file=string_buffer, width=120)
+
+    # Convert dataframe to string values for consistent rendering
+    df_str = df.astype(str)
+
+    # Create the rich table
+    table = Table(title=title)
+
+    # Add columns
+    for col in df_str.columns:
+        table.add_column(col, justify="left")
+
+    # Add rows with error handling
+    for row in df_str.values:
+        with contextlib.suppress(NotRenderableError):
+            table.add_row(*row)
+
+    # Render table to string
+    console.print(table)
+    return string_buffer.getvalue()
 
 
 METRIC_MAPPING = {
@@ -200,6 +240,13 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
                 show_progress=self.config.show_progress,
                 batch_size=self.config.batch_size,
             )
+
+            # Render evaluation results as a rich table for better readability
+            result_df = result.to_pandas()
+            table_output = _render_dataframe_as_table(
+                result_df, "Ragas Evaluation Results"
+            )
+            logger.info(f"Ragas evaluation completed:\n{table_output}")
 
             # Convert result to Llama Stack format
             generations = []
