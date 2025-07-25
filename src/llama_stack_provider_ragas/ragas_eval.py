@@ -13,10 +13,7 @@ from ragas import EvaluationDataset
 from ragas import evaluate as ragas_evaluate
 from ragas.llms import llm_factory
 from ragas.metrics import (
-    AnswerCorrectness,
     AspectCritic,
-    FactualCorrectness,
-    SummarizationScore,
     answer_relevancy,
     context_precision,
     context_recall,
@@ -25,24 +22,12 @@ from ragas.metrics import (
 from ragas.run_config import RunConfig
 
 from .config import RagasEvalProviderConfig
+from .constants import METRIC_MAPPING
 from .errors import RagasConfigError, RagasDatasetError, RagasEvaluationError
 from .logging_utils import render_dataframe_as_table
 from .wrappers_inline import LlamaStackInlineEmbeddings, LlamaStackInlineLLM
 
 logger = logging.getLogger(__name__)
-
-
-METRIC_MAPPING = {
-    "answer_relevancy": answer_relevancy,
-    "context_precision": context_precision,
-    "faithfulness": faithfulness,
-    "context_recall": context_recall,
-    "answer_correctness": AnswerCorrectness(),
-    "factual_correctness": FactualCorrectness(),
-    "summarization_score": SummarizationScore(),
-    # "bleu_score": BleuScore(), # TODO: add these later
-    # "rouge_score": RougeScore(),
-}
 
 
 class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
