@@ -2,12 +2,32 @@ import json
 from typing import Any, Dict, List, Optional
 
 from llama_stack.schema_utils import json_schema_type
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
+from ragas.metrics import Metric
+
+from .constants import METRIC_MAPPING
 
 
 @json_schema_type
 class RagasEvalProviderConfig(BaseModel):
     """Configuration for Ragas evaluation provider."""
+
+    model: str = Field(
+        default="meta-llama/Llama-3.2-3B-Instruct",
+        description=(
+            "Model to use for evaluation. "
+            "Adding here for completeness, as it is already provided in the benchmark config's eval_candidate. "
+            "It must match the identifier of the model in Llama Stack."
+        ),
+    )
+
+    sampling_params: dict = Field(
+        default={"temperature": 0.1, "max_tokens": 100},
+        description=(
+            "Sampling parameters for the model. "
+            "Also here for completeness, as it is already provided in the benchmark config's eval_candidate. "
+        ),
+    )
 
     embedding_model: str = Field(
         default="all-MiniLM-L6-v2",
@@ -18,23 +38,28 @@ class RagasEvalProviderConfig(BaseModel):
         ),
     )
 
-    metrics: List[str] = Field(
+    metric_names: List[str] = Field(
         default=[
             "answer_relevancy",
             "context_precision",
             "faithfulness",
             "context_recall",
         ],
-        description="Default metrics to use for evaluation",
+        description="Metrics to use for evaluation",
     )
 
-    @field_validator("metrics", mode="before")
+    @field_validator("metric_names", mode="before")
     @classmethod
     def parse_metrics(cls, v):
         """Parse metrics from string if needed (for YAML env var substitution)."""
         if isinstance(v, str):
             return json.loads(v)
         return v
+
+    @computed_field
+    @property
+    def metric_functions(self) -> List[Metric]:
+        return [METRIC_MAPPING[metric] for metric in self.metric_names]
 
     batch_size: Optional[int] = Field(
         default=None,
@@ -46,7 +71,7 @@ class RagasEvalProviderConfig(BaseModel):
     )
 
     raise_exceptions: bool = Field(
-        default=False,
+        default=True,
         description="Whether to raise exceptions or return NaN for failed evaluations",
     )
 
