@@ -1,7 +1,6 @@
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from datasets import Dataset
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
 from llama_stack.apis.datasetio import DatasetIO
@@ -23,7 +22,7 @@ from ragas.run_config import RunConfig
 
 from .config import RagasEvalProviderConfig
 from .constants import METRIC_MAPPING
-from .errors import RagasConfigError, RagasDatasetError, RagasEvaluationError
+from .errors import RagasConfigError, RagasEvaluationError
 from .logging_utils import render_dataframe_as_table
 from .wrappers_inline import LlamaStackInlineEmbeddings, LlamaStackInlineLLM
 
@@ -75,48 +74,14 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
 
         return metrics
 
-    def _prepare_dataset(self, data: Union[List[Dict], Dataset]) -> EvaluationDataset:
-        """Prepare the dataset for evaluation.
-
-        Args:
-            data: Input data as list of dictionaries or Dataset
-
-        Returns:
-            Prepared EvaluationDataset
-        """
-        if isinstance(data, Dataset):
-            # Convert to list of dictionaries
-            data = data.to_list()
-
-        # Validate required columns
-        required_columns = {"question", "answer"}
-        if not data:
-            raise RagasDatasetError("Empty dataset provided")
-
-        sample = data[0]
-        missing_columns = required_columns - set(sample.keys())
-        if missing_columns:
-            raise RagasDatasetError(f"Missing required columns: {missing_columns}")
-
-        # Convert to EvaluationDataset format
-        try:
-            # Transform data to match Ragas SingleTurnSample format
-            transformed_data = []
-            for item in data:
-                transformed_item = {
-                    "user_input": item.get("question", ""),
-                    "response": item.get("answer", ""),
-                    "retrieved_contexts": item.get("contexts", []),
-                    "reference": item.get("ground_truth", ""),
-                }
-                transformed_data.append(transformed_item)
-
-            dataset = EvaluationDataset.from_list(transformed_data)
-            return dataset
-
-        except Exception as e:
-            logger.error(f"Failed to prepare dataset: {str(e)}")
-            raise RagasDatasetError(f"Failed to prepare dataset: {str(e)}")
+    async def _prepare_dataset(
+        self, dataset_id: str, limit: int = -1
+    ) -> EvaluationDataset:
+        all_rows = await self.datasetio_api.iterrows(
+            dataset_id=dataset_id,
+            limit=limit,
+        )
+        return EvaluationDataset.from_list(all_rows.data)
 
     async def register_benchmark(self, task_def: Benchmark) -> None:
         self.benchmarks[task_def.identifier] = task_def
@@ -154,27 +119,15 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
         dataset_id = task_def.dataset_id
         scoring_functions = task_def.scoring_functions
 
-        all_rows = await self.datasetio_api.iterrows(
-            dataset_id=dataset_id,
-            limit=(
-                -1
-                if benchmark_config.num_examples is None
-                else benchmark_config.num_examples
-            ),
-        )
-
         try:
-            if not all_rows.data:
-                raise RagasDatasetError("No input rows provided for evaluation")
-
-            eval_dataset = self._prepare_dataset(all_rows.data)
-            # Get metrics without pre-configuring them - let ragas_evaluate handle it
+            eval_dataset = await self._prepare_dataset(
+                dataset_id, benchmark_config.num_examples
+            )
             metrics = self._get_metrics(scoring_functions)
 
             result = ragas_evaluate(
                 dataset=eval_dataset,
                 metrics=metrics,
-                # Pass wrappers explicitly - better than pre-configuring metrics
                 llm=llm_wrapper,
                 embeddings=embeddings_wrapper,
                 experiment_name=self.config.experiment_name,
@@ -192,22 +145,8 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
             )
             logger.info(f"Ragas evaluation completed:\n{table_output}")
 
-            # Convert result to Llama Stack format
-            generations = []
-            scores = {}
-
-            # Extract generations from the dataset
-            for i, sample in enumerate(all_rows.data):
-                generation = {
-                    "index": i,
-                    "question": sample.get("question", ""),
-                    "answer": sample.get("answer", ""),
-                    "contexts": sample.get("contexts", []),
-                    "ground_truth": sample.get("ground_truth", ""),
-                }
-                generations.append(generation)
-
             # Convert scores to ScoringResult format
+            scores = {}
             for metric_name in scoring_functions:
                 metric_scores = result[metric_name]
                 score_rows = [{"score": score} for score in metric_scores]
@@ -223,7 +162,7 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
                 )
 
             logger.info(f"Evaluation completed for model {model_id}. Scores: {scores}")
-            res = EvaluateResponse(generations=generations, scores=scores)
+            res = EvaluateResponse(generations=eval_dataset.to_list(), scores=scores)
 
         except Exception as e:
             logger.error(f"Evaluation failed: {str(e)}")
