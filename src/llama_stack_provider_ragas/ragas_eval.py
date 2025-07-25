@@ -31,7 +31,7 @@ from rich.table import Table
 
 from .config import RagasEvalProviderConfig
 from .errors import RagasConfigError, RagasDatasetError, RagasEvaluationError
-from .utils import LlamaStackEmbeddingsWrapper, LlamaStackLLMWrapper
+from .wrappers_inline import LlamaStackInlineEmbeddings, LlamaStackInlineLLM
 
 logger = logging.getLogger(__name__)
 
@@ -197,13 +197,11 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
                 if hasattr(ragas_run_config, key):
                     setattr(ragas_run_config, key, value)
 
-        # Create dynamic LLM wrapper using Llama Stack inference API
-        llm_wrapper = LlamaStackLLMWrapper(
+        llm_wrapper = LlamaStackInlineLLM(
             self.inference_api, model_id, sampling_params, run_config=ragas_run_config
         )
 
-        # benchmark config does not support embedding model id
-        embeddings_wrapper = LlamaStackEmbeddingsWrapper(
+        embeddings_wrapper = LlamaStackInlineEmbeddings(
             self.inference_api, self.config.embedding_model, run_config=ragas_run_config
         )
         task_def = self.benchmarks[benchmark_id]
