@@ -11,10 +11,15 @@ dependencies = [
 
 [project.optional-dependencies]
 distro = ["opentelemetry-api", "opentelemetry-exporter-otlp", "aiosqlite", "ollama", "uvicorn"]
-dev = ["pytest", "pytest-cov", "black", "isort", "ipykernel", "rich"]
+dev = ["pytest", "pytest-asyncio", "pytest-cov", "black", "isort", "ipykernel", "rich"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-python_paths = ["src"]
-addopts = "-v" 
+pythonpath = ["src"]
+addopts = "-v"
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "integration_test: Integration tests that require a running Llama Stack server",
+]
