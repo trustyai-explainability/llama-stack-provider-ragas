@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -111,66 +112,76 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
         llm_wrapper = LlamaStackInlineLLM(
             self.inference_api, model_id, sampling_params, run_config=ragas_run_config
         )
-
         embeddings_wrapper = LlamaStackInlineEmbeddings(
             self.inference_api, self.config.embedding_model, run_config=ragas_run_config
         )
+
         task_def = self.benchmarks[benchmark_id]
         dataset_id = task_def.dataset_id
         scoring_functions = task_def.scoring_functions
+        metrics = self._get_metrics(scoring_functions)
+        eval_dataset = await self._prepare_dataset(
+            dataset_id, benchmark_config.num_examples
+        )
 
-        try:
-            eval_dataset = await self._prepare_dataset(
-                dataset_id, benchmark_config.num_examples
+        ragas_evaluation_task = asyncio.create_task(
+            self._run_ragas_evaluation(
+                eval_dataset,
+                llm_wrapper,
+                embeddings_wrapper,
+                metrics,
+                ragas_run_config,
             )
-            metrics = self._get_metrics(scoring_functions)
-
-            result = ragas_evaluate(
-                dataset=eval_dataset,
-                metrics=metrics,
-                llm=llm_wrapper,
-                embeddings=embeddings_wrapper,
-                experiment_name=self.config.experiment_name,
-                run_config=ragas_run_config,
-                raise_exceptions=self.config.raise_exceptions,
-                column_map=self.config.column_map,
-                show_progress=self.config.show_progress,
-                batch_size=self.config.batch_size,
-            )
-
-            # Render evaluation results as a rich table for better readability
-            result_df = result.to_pandas()
-            table_output = render_dataframe_as_table(
-                result_df, "Ragas Evaluation Results"
-            )
-            logger.info(f"Ragas evaluation completed:\n{table_output}")
-
-            # Convert scores to ScoringResult format
-            scores = {}
-            for metric_name in scoring_functions:
-                metric_scores = result[metric_name]
-                score_rows = [{"score": score} for score in metric_scores]
-
-                if metric_scores:
-                    aggregated_score = sum(metric_scores) / len(metric_scores)
-                else:
-                    aggregated_score = 0.0
-
-                scores[metric_name] = ScoringResult(
-                    score_rows=score_rows,
-                    aggregated_results={metric_name: aggregated_score},
-                )
-
-            logger.info(f"Evaluation completed for model {model_id}. Scores: {scores}")
-            res = EvaluateResponse(generations=eval_dataset.to_list(), scores=scores)
-
-        except Exception as e:
-            logger.error(f"Evaluation failed: {str(e)}")
-            raise RagasEvaluationError(f"Evaluation failed: {str(e)}")
+        )
+        ragas_evaluation_task.add_done_callback(self._handle_evaluation_completion)
 
         job_id = str(len(self.job_results))
-        self.job_results[job_id] = res
-        return Job(job_id=job_id, status=JobStatus.completed)
+        self.job_results[job_id] = None
+        return Job(job_id=job_id, status=JobStatus.in_progress)
+
+    async def _run_ragas_evaluation(
+        self,
+        eval_dataset: EvaluationDataset,
+        llm_wrapper: LlamaStackInlineLLM,
+        embeddings_wrapper: LlamaStackInlineEmbeddings,
+        metrics: List[Metric],
+        ragas_run_config: RunConfig,
+    ) -> EvaluateResponse:
+        result = await asyncio.to_thread(
+            ragas_evaluate,
+            dataset=eval_dataset,
+            metrics=metrics,
+            llm=llm_wrapper,
+            embeddings=embeddings_wrapper,
+            experiment_name=self.config.experiment_name,
+            run_config=ragas_run_config,
+            raise_exceptions=self.config.raise_exceptions,
+            column_map=self.config.column_map,
+            show_progress=self.config.show_progress,
+            batch_size=self.config.batch_size,
+        )
+        result_df = result.to_pandas()
+        table_output = render_dataframe_as_table(result_df, "Ragas Evaluation Results")
+        logger.info(f"Ragas evaluation completed:\n{table_output}")
+
+        # Convert scores to ScoringResult format
+        scores = {}
+        for metric_name in [m.name for m in metrics]:
+            metric_scores = result[metric_name]
+            score_rows = [{"score": score} for score in metric_scores]
+
+            if metric_scores:
+                aggregated_score = sum(metric_scores) / len(metric_scores)
+            else:
+                aggregated_score = 0.0
+
+            scores[metric_name] = ScoringResult(
+                score_rows=score_rows,
+                aggregated_results={metric_name: aggregated_score},
+            )
+
+        logger.info(f"Evaluation completed. Scores: {scores}")
+        return EvaluateResponse(generations=eval_dataset.to_list(), scores=scores)
 
     async def evaluate_rows(
         self,
@@ -239,3 +250,12 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
 
         metric = AspectCritic(name=metric_name, llm=llm, definition=definition)
         return metric
+
+    def _handle_evaluation_completion(self, task):
+        """Handle completion of ragas evaluation task."""
+        try:
+            result = task.result()
+            self.job_results[result.job_id] = result
+        except Exception as e:
+            logger.error(f"Evaluation task failed: {e}")
+            # Optionally store error state in job_results
