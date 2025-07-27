@@ -52,7 +52,12 @@ models:
     model_id: all-MiniLM-L6-v2
     provider_id: ollama
     provider_model_id: all-minilm:latest
-    model_type: embedding     
+    model_type: embedding
+  - metadata: {}
+    model_id: granite3.3:2b
+    provider_id: ollama
+    provider_model_id: granite3.3:2b
+    model_type: llm
 server:
   host: localhost
   port: 8321

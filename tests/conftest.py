@@ -13,7 +13,8 @@ def lls_client():
 @pytest.fixture
 def eval_config():
     return RagasEvalProviderConfig(
-        model="meta-llama/Llama-3.2-3B-Instruct",
+        # model="meta-llama/Llama-3.2-3B-Instruct",
+        model="granite3.3:2b",
         sampling_params={"temperature": 0.1, "max_tokens": 100},
         embedding_model="all-MiniLM-L6-v2",
         metric_names=["answer_relevancy"],
