@@ -7,11 +7,17 @@ apis:
   - datasetio
 providers:
   eval:
-    - provider_id: trustyai_ragas
+    - provider_id: trustyai_ragas_remote
       provider_type: remote::trustyai_ragas
       config:
         metrics: ${env.RAGAS_METRICS:["answer_relevancy", "context_precision", "faithfulness", "context_recall"]}
-        ragas_max_workers: ${env.RAGAS_MAX_WORKERS:1}
+        # ragas_max_workers: ${env.RAGAS_MAX_WORKERS:1}
+        #batch_size: ${env.RAGAS_BATCH_SIZE:}
+    - provider_id: trustyai_ragas_inline
+      provider_type: inline::trustyai_ragas
+      config:
+        metrics: ${env.RAGAS_METRICS:["answer_relevancy", "context_precision", "faithfulness", "context_recall"]}
+        # ragas_max_workers: ${env.RAGAS_MAX_WORKERS:1}
         #batch_size: ${env.RAGAS_BATCH_SIZE:}
   datasetio:
     # TODO: add this
