@@ -1,6 +1,7 @@
 import asyncio
+import functools as ft
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
@@ -11,9 +12,8 @@ from llama_stack.apis.scoring import ScoringResult
 from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
 from ragas import EvaluationDataset
 from ragas import evaluate as ragas_evaluate
-from ragas.llms import llm_factory
 from ragas.metrics import (
-    AspectCritic,
+    Metric,
     answer_relevancy,
     context_precision,
     context_recall,
@@ -23,11 +23,18 @@ from ragas.run_config import RunConfig
 
 from .config import RagasEvalProviderConfig
 from .constants import METRIC_MAPPING
-from .errors import RagasConfigError, RagasEvaluationError
+from .errors import RagasEvaluationError
 from .logging_utils import render_dataframe_as_table
 from .wrappers_inline import LlamaStackInlineEmbeddings, LlamaStackInlineLLM
 
 logger = logging.getLogger(__name__)
+
+
+class RagasEvaluationJob(Job):
+    """Ragas evaluation job. Keeps track of the evaluation result."""
+
+    # TODO: maybe propose this change to Job itself
+    result: EvaluateResponse | None
 
 
 class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
@@ -42,10 +49,68 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
         self.config = config
         self.datasetio_api = datasetio_api
         self.inference_api = inference_api
-        self.job_results: Dict[str, EvaluateResponse] = {}
+        self.evaluation_jobs: Dict[str, RagasEvaluationJob] = {}
         self.benchmarks: Dict[str, Benchmark] = {}
 
-    def _get_metrics(self, scoring_functions: List[str]) -> List:
+    async def run_eval(
+        self,
+        benchmark_id: str,
+        benchmark_config: BenchmarkConfig,
+    ) -> Job:
+        eval_candidate = benchmark_config.eval_candidate
+        if eval_candidate.type != "model":
+            raise RagasEvaluationError(
+                "Ragas currently only supports model candidates. "
+                "We will add support for agents soon!"
+            )
+
+        # trustyai.eval.ragas.RagasEvaluator() --> invoke the local executor
+
+        model_id = benchmark_config.eval_candidate.model
+        sampling_params = eval_candidate.sampling_params
+
+        ragas_run_config = RunConfig(max_workers=self.config.ragas_max_workers)
+        if self.config.additional_config:
+            for key, value in self.config.additional_config.items():
+                if hasattr(ragas_run_config, key):
+                    setattr(ragas_run_config, key, value)
+
+        llm_wrapper = LlamaStackInlineLLM(
+            self.inference_api, model_id, sampling_params, run_config=ragas_run_config
+        )
+        embeddings_wrapper = LlamaStackInlineEmbeddings(
+            self.inference_api, self.config.embedding_model, run_config=ragas_run_config
+        )
+
+        task_def = self.benchmarks[benchmark_id]  # TODO: add error handling
+        dataset_id = task_def.dataset_id
+        scoring_functions = task_def.scoring_functions
+        metrics = self._get_metrics(scoring_functions)
+        eval_dataset = await self._prepare_dataset(
+            dataset_id, benchmark_config.num_examples
+        )
+
+        ragas_evaluation_task = asyncio.create_task(
+            self._run_ragas_evaluation(
+                eval_dataset,
+                llm_wrapper,
+                embeddings_wrapper,
+                metrics,
+                ragas_run_config,
+            )
+        )
+
+        job_id = str(len(self.evaluation_jobs))
+        job = RagasEvaluationJob(
+            job_id=job_id, status=JobStatus.in_progress, result=None
+        )
+        ragas_evaluation_task.add_done_callback(
+            ft.partial(self._handle_evaluation_completion, job)
+        )
+        self.evaluation_jobs[job_id] = job
+        return job
+
+    def _get_metrics(self, scoring_functions: List[str]) -> List[Metric]:
         """Get the list of metrics to run based on scoring functions.
 
         Args:
@@ -83,61 +148,6 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
             limit=limit,
         )
         return EvaluationDataset.from_list(all_rows.data)
-
-    async def register_benchmark(self, task_def: Benchmark) -> None:
-        self.benchmarks[task_def.identifier] = task_def
-        logger.info(f"Registered benchmark: {task_def.identifier}")
-
-    async def run_eval(
-        self,
-        benchmark_id: str,
-        benchmark_config: BenchmarkConfig,
-    ) -> Job:
-        eval_candidate = benchmark_config.eval_candidate
-        if eval_candidate.type != "model":
-            raise RagasEvaluationError(
-                "Ragas currently only supports model candidates. "
-                "We will add support for agents soon!"
-            )
-
-        model_id = benchmark_config.eval_candidate.model
-        sampling_params = eval_candidate.sampling_params
-
-        ragas_run_config = RunConfig(max_workers=self.config.ragas_max_workers)
-        if self.config.additional_config:
-            for key, value in self.config.additional_config.items():
-                if hasattr(ragas_run_config, key):
-                    setattr(ragas_run_config, key, value)
-
-        llm_wrapper = LlamaStackInlineLLM(
-            self.inference_api, model_id, sampling_params, run_config=ragas_run_config
-        )
-        embeddings_wrapper = LlamaStackInlineEmbeddings(
-            self.inference_api, self.config.embedding_model, run_config=ragas_run_config
-        )
-
-        task_def = self.benchmarks[benchmark_id]
-        dataset_id = task_def.dataset_id
-        scoring_functions = task_def.scoring_functions
-        metrics = self._get_metrics(scoring_functions)
-        eval_dataset = await self._prepare_dataset(
-            dataset_id, benchmark_config.num_examples
-        )
-
-        ragas_evaluation_task = asyncio.create_task(
-            self._run_ragas_evaluation(
-                eval_dataset,
-                llm_wrapper,
-                embeddings_wrapper,
-                metrics,
-                ragas_run_config,
-            )
-        )
-        ragas_evaluation_task.add_done_callback(self._handle_evaluation_completion)
-
-        job_id = str(len(self.job_results))
-        self.job_results[job_id] = None
-        return Job(job_id=job_id, status=JobStatus.in_progress)
 
     async def _run_ragas_evaluation(
         self,
@@ -183,6 +193,18 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
         logger.info(f"Evaluation completed. Scores: {scores}")
         return EvaluateResponse(generations=eval_dataset.to_list(), scores=scores)
 
+    def _handle_evaluation_completion(
+        self, job: RagasEvaluationJob, task: asyncio.Task
+    ):
+        try:
+            result = task.result()
+        except Exception as e:
+            logger.error(f"Evaluation task failed: {e}")
+            job.status = JobStatus.failed
+        else:
+            job.status = JobStatus.completed
+            job.result = result
+
     async def evaluate_rows(
         self,
         benchmark_id: str,
@@ -205,57 +227,23 @@ class RagasEvaluator(Eval, BenchmarksProtocolPrivate):
         Returns:
             The status of the evaluation job.
         """
-        if job_id not in self.job_results:
+        if job_id not in self.evaluation_jobs:
             raise RagasEvaluationError(f"Job {job_id} not found")
 
-        return Job(job_id=job_id, status=JobStatus.completed)
+        return self.evaluation_jobs[job_id]
 
     async def job_cancel(self, benchmark_id: str, job_id: str) -> None:
         raise NotImplementedError("Job cancel is not implemented yet")
 
-    async def job_result(self, benchmark_id: str, job_id: str) -> EvaluateResponse:
-        if job_id not in self.job_results:
+    async def job_result(
+        self, benchmark_id: str, job_id: str
+    ) -> EvaluateResponse | None:
+        if job_id not in self.evaluation_jobs:
             raise RagasEvaluationError(f"Job {job_id} not found")
 
-        return self.job_results[job_id]
+        # TODO: propose to change return type in Eval.job_result
+        return self.evaluation_jobs[job_id].result
 
-    def get_available_metrics(self) -> List[str]:
-        """Get list of available metric names.
-
-        Returns:
-            List of available metric names
-        """
-        return list(METRIC_MAPPING.keys())
-
-    def create_custom_metric(
-        self, metric_name: str, definition: str, llm_model: Optional[str] = None
-    ) -> AspectCritic:
-        """Create a custom AspectCritic metric.
-
-        Args:
-            metric_name: Name for the metric
-            definition: Definition/criteria for the metric
-            llm_model: Optional LLM model to use (overrides config)
-
-        Returns:
-            Configured AspectCritic metric
-        """
-        llm = None
-        if llm_model:
-            llm = llm_factory(model=llm_model)
-        elif self.llm:
-            llm = self.llm
-        else:
-            raise RagasConfigError("No LLM available for custom metric")
-
-        metric = AspectCritic(name=metric_name, llm=llm, definition=definition)
-        return metric
-
-    def _handle_evaluation_completion(self, task):
-        """Handle completion of ragas evaluation task."""
-        try:
-            result = task.result()
-            self.job_results[result.job_id] = result
-        except Exception as e:
-            logger.error(f"Evaluation task failed: {e}")
-            # Optionally store error state in job_results
+    async def register_benchmark(self, task_def: Benchmark) -> None:
+        self.benchmarks[task_def.identifier] = task_def
+        logger.info(f"Registered benchmark: {task_def.identifier}")
