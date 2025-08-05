@@ -3,7 +3,8 @@ from typing import Any, Dict
 from llama_stack.distribution.datatypes import Api
 
 from .config import RagasEvalProviderConfig
-from .ragas_eval import RagasEvaluatorInline, RagasEvaluatorRemote
+from .eval_inline import RagasEvaluatorInline
+from .eval_remote import RagasEvaluatorRemote
 
 
 async def get_adapter_impl(

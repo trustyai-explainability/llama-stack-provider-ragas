@@ -5,6 +5,7 @@ from datetime import datetime
 import pytest
 from ragas.metrics import answer_relevancy
 
+# mark as integration, see tool.pytest.ini_options in pyproject.toml
 pytestmark = pytest.mark.integration_test
 
 
@@ -35,6 +36,7 @@ def test_single_metric_evaluation(
         benchmark_id=benchmark_id,
         dataset_id=dataset_id,
         scoring_functions=[metric_to_test.name],
+        provider_id="trustyai_ragas_inline",
     )
 
     job = lls_client.eval.run_eval(

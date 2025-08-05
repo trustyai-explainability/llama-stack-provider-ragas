@@ -15,6 +15,7 @@ from llama_stack_provider_ragas.wrappers_remote import (
 )
 
 logger = logging.getLogger(__name__)
+# mark as integration, see tool.pytest.ini_options in pyproject.toml
 pytestmark = pytest.mark.integration_test
 
 
