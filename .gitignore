@@ -36,6 +36,7 @@ venv.bak/
 # IDE
 .vscode/*
 !.vscode/launch.json
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
