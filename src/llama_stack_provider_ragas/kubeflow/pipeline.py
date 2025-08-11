@@ -11,18 +11,20 @@ from .components import (
 @dsl.pipeline()
 def ragas_evaluation_pipeline(
     model: str,
+    dataset_id: str,
     sampling_params: dict,
     embedding_model: str,
     metrics: List[str],
     llama_stack_base_url: str,
+    num_examples: int = -1,
 ):
     # TODO: consider a step here to validate that:
     # dataset exists, has data,
     # the requested embeddding and llm are available
     dataset = retrieve_data_from_llama_stack(
-        dataset_id="test-dataset",
+        dataset_id=dataset_id,
         llama_stack_base_url=llama_stack_base_url,
-        num_examples=10,
+        num_examples=num_examples,
     )
     ragas_result = run_ragas_evaluation(
         input_dataset=dataset.output,
@@ -32,6 +34,7 @@ def ragas_evaluation_pipeline(
         metrics=metrics,
         llama_stack_base_url=llama_stack_base_url,
     )
+    # TODO: need to  store the ragas_result.uri to later retrieve the results
 
 
 # TODO: add a pipeline that processes each dataset in parallel

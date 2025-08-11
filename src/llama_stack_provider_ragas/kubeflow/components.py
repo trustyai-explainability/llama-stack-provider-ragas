@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 
 from dotenv import load_dotenv
 from kfp import dsl
@@ -11,8 +11,8 @@ load_dotenv()
 def retrieve_data_from_llama_stack(
     dataset_id: str,
     llama_stack_base_url: str,
-    num_examples: Optional[int],
     output_dataset: dsl.Output[dsl.Dataset],
+    num_examples: int = -1,  # TODO: parse this
 ):
     import pandas as pd
     from llama_stack_client import LlamaStackClient

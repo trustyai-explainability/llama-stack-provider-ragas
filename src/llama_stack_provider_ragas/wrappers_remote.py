@@ -144,7 +144,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
 
         return prompt_text, sampling_params
 
-    def _create_llm_output(self) -> dict:
+    def _initialize_llm_output(self) -> dict:
         """Create initial LLM output structure."""
         return {
             "llama_stack_responses": [],
@@ -176,7 +176,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
                 prompt, temperature
             )
             generations = []
-            llm_output = self._create_llm_output()
+            llm_output = self._initialize_llm_output()
 
             for _ in range(n):
                 response: CompletionResponse = self.sync_client.inference.completion(
@@ -208,7 +208,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
                 prompt, temperature
             )
             generations = []
-            llm_output = self._create_llm_output()
+            llm_output = self._initialize_llm_output()
 
             for _ in range(n):
                 response: CompletionResponse = (
