@@ -12,6 +12,7 @@
             "module": "llama_stack.cli.llama",
             "args": ["stack", "run", "distribution/run.yaml"],
             "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
