@@ -5,8 +5,9 @@ description = "Ragas evaluation as an out-of-tree Llama Stack provider"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "llama-stack",
-    "ragas",
+    "llama-stack==0.2.11",
+    "ragas==0.3.0",
+    "kfp>=2.5.0", # maybe this should be in an extra?
 ]
 
 [project.optional-dependencies]
@@ -47,17 +48,12 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
+
 ignore = [
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
 ]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.12"
@@ -81,3 +77,4 @@ exclude = [
     ".venv",
     ".mypy_cache",
 ]
+
