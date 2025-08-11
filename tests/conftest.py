@@ -1,20 +1,24 @@
+import os
+
 import pytest
+from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 from ragas import EvaluationDataset
 
-from llama_stack_provider_ragas.config import RagasEvalProviderConfig
+from llama_stack_provider_ragas.config import RagasProviderInlineConfig
+
+load_dotenv()
 
 
 @pytest.fixture
 def lls_client():
-    return LlamaStackClient(base_url="http://localhost:8321")
+    return LlamaStackClient(base_url=os.environ["LLAMA_STACK_URL"])
 
 
 @pytest.fixture
-def eval_config():
-    return RagasEvalProviderConfig(
-        # model="meta-llama/Llama-3.2-3B-Instruct",
-        model="granite3.3:2b",
+def inline_eval_config():
+    return RagasProviderInlineConfig(
+        model="granite3.3:2b",  # TODO : read from env
         sampling_params={"temperature": 0.1, "max_tokens": 100},
         embedding_model="all-MiniLM-L6-v2",
         metric_names=["answer_relevancy"],
