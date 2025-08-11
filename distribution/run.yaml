@@ -7,18 +7,19 @@ apis:
   - datasetio
 providers:
   eval:
-    - provider_id: trustyai_ragas_remote
-      provider_type: remote::trustyai_ragas
-      config:
-        metrics: ${env.RAGAS_METRICS:["answer_relevancy", "context_precision", "faithfulness", "context_recall"]}
-        # ragas_max_workers: ${env.RAGAS_MAX_WORKERS:1}
-        #batch_size: ${env.RAGAS_BATCH_SIZE:}
     - provider_id: trustyai_ragas_inline
       provider_type: inline::trustyai_ragas
       config:
-        metrics: ${env.RAGAS_METRICS:["answer_relevancy", "context_precision", "faithfulness", "context_recall"]}
-        # ragas_max_workers: ${env.RAGAS_MAX_WORKERS:1}
-        #batch_size: ${env.RAGAS_BATCH_SIZE:}
+        metrics: ["answer_relevancy"]
+    - provider_id: trustyai_ragas_remote
+      provider_type: remote::trustyai_ragas
+      config:
+        metrics: ["answer_relevancy"]
+        kubeflow_config:
+          pipelines_endpoint: ${env.KUBEFLOW_PIPELINES_ENDPOINT}
+          namespace: ${env.KUBEFLOW_NAMESPACE}
+          llama_stack_url: ${env.LLAMA_STACK_URL}
+          base_image: ${env.KUBEFLOW_BASE_IMAGE}
   datasetio:
     # TODO: add this
     # - provider_id: huggingface
