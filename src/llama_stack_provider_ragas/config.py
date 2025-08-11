@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from llama_stack.schema_utils import json_schema_type
 from pydantic import BaseModel, Field, computed_field, field_validator
@@ -8,12 +8,37 @@ from ragas.metrics import Metric
 from .constants import METRIC_MAPPING
 
 
-@json_schema_type
-class RagasEvalProviderConfig(BaseModel):
-    """Configuration for Ragas evaluation provider."""
+class RagasConfig(BaseModel):
+    """Additional configuration parameters for Ragas evaluation."""
+
+    batch_size: Optional[int] = Field(
+        default=None,
+        description="Batch size for evaluation. If None, no batching is done.",
+    )
+
+    show_progress: bool = Field(
+        default=True, description="Whether to show progress bar during evaluation"
+    )
+
+    raise_exceptions: bool = Field(
+        default=True,
+        description="Whether to raise exceptions or return NaN for failed evaluations",
+    )
+
+    experiment_name: Optional[str] = Field(
+        default=None, description="Name for experiment tracking"
+    )
+
+    column_map: Optional[Dict[str, str]] = Field(
+        default=None, description="Mapping of dataset column names to expected names"
+    )
+
+
+class RagasProviderBaseConfig(BaseModel):
+    """Base configuration shared by inline and remote providers."""
 
     model: str = Field(
-        default="meta-llama/Llama-3.2-3B-Instruct",
+        default="granite3.3:2b",
         description=(
             "Model to use for evaluation. "
             "Adding here for completeness, as it is already provided in the benchmark config's eval_candidate. "
@@ -46,6 +71,7 @@ class RagasEvalProviderConfig(BaseModel):
             "context_recall",
         ],
         description="Metrics to use for evaluation",
+        alias="metrics",
     )
 
     @field_validator("metric_names", mode="before")
@@ -56,38 +82,46 @@ class RagasEvalProviderConfig(BaseModel):
             return json.loads(v)
         return v
 
-    @computed_field
     @property
+    @computed_field(return_type=List[Metric])
     def metric_functions(self) -> List[Metric]:
         return [METRIC_MAPPING[metric] for metric in self.metric_names]
 
-    batch_size: Optional[int] = Field(
-        default=None,
-        description="Batch size for evaluation. If None, no batching is done.",
+    ragas_config: RagasConfig = Field(
+        default=RagasConfig(),
+        description="Additional configuration parameters for Ragas",
     )
 
-    show_progress: bool = Field(
-        default=True, description="Whether to show progress bar during evaluation"
+
+@json_schema_type
+class RagasProviderInlineConfig(RagasProviderBaseConfig):
+    """Configuration for Ragas evaluation provider (inline execution)."""
+
+
+@json_schema_type
+class RagasProviderRemoteConfig(RagasProviderBaseConfig):
+    """Configuration for Ragas evaluation provider (remote execution)."""
+
+    kubeflow_config: "KubeflowConfig" = Field(
+        description="Additional configuration parameters for remote execution",
     )
 
-    raise_exceptions: bool = Field(
-        default=True,
-        description="Whether to raise exceptions or return NaN for failed evaluations",
+
+class KubeflowConfig(BaseModel):
+    """Configuration for Kubeflow remote execution."""
+
+    pipelines_endpoint: str = Field(
+        description="Kubeflow Pipelines API endpoint URL (required for remote execution)",
     )
 
-    experiment_name: Optional[str] = Field(
-        default=None, description="Name for experiment tracking"
+    namespace: str = Field(
+        description="Kubeflow namespace for pipeline execution",
     )
 
-    column_map: Optional[Dict[str, str]] = Field(
-        default=None, description="Mapping of dataset column names to expected names"
+    llama_stack_url: str = Field(
+        description="Base URL for Llama Stack API (accessible from Kubeflow pods)",
     )
 
-    additional_config: Optional[Dict[str, Any]] = Field(
-        default=None, description="Additional configuration parameters for Ragas"
-    )
-
-    ragas_max_workers: int = Field(
-        default=1,
-        description="Maximum number of concurrent workers for Ragas evaluation. Controls the level of parallelism.",
+    base_image: str = Field(
+        description="Base image for Kubeflow pipeline components",
     )
