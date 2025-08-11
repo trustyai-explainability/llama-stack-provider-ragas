@@ -21,7 +21,11 @@ def unique_timestamp():
     ],  # , context_precision, faithfulness, context_recall]
 )
 def test_single_metric_evaluation(
-    eval_config, lls_client, unique_timestamp, raw_evaluation_data, metric_to_test
+    inline_eval_config,
+    lls_client,
+    unique_timestamp,
+    raw_evaluation_data,
+    metric_to_test,
 ):
     dataset_id = f"test_ragas_dataset_{unique_timestamp}"
     lls_client.datasets.register(
@@ -44,8 +48,8 @@ def test_single_metric_evaluation(
         benchmark_config={
             "eval_candidate": {
                 "type": "model",
-                "model": eval_config.model,
-                "sampling_params": eval_config.sampling_params,
+                "model": inline_eval_config.model,
+                "sampling_params": inline_eval_config.sampling_params,
             },
             "scoring_params": {},
         },

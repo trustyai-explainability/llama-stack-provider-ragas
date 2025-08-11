@@ -21,7 +21,7 @@ from ragas.metrics import (
 )
 from ragas.run_config import RunConfig
 
-from .config import RagasEvalProviderConfig
+from .config import RagasProviderInlineConfig
 from .constants import METRIC_MAPPING
 from .errors import RagasEvaluationError
 from .logging_utils import render_dataframe_as_table
@@ -40,7 +40,7 @@ class RagasEvaluationJob(Job):
 class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
     def __init__(
         self,
-        config: RagasEvalProviderConfig,
+        config: RagasProviderInlineConfig,
         datasetio_api: DatasetIO,
         inference_api: Inference,
     ):
@@ -65,11 +65,8 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         model_id = benchmark_config.eval_candidate.model
         sampling_params = eval_candidate.sampling_params
 
-        ragas_run_config = RunConfig(max_workers=self.config.ragas_max_workers)
-        if self.config.additional_config:
-            for key, value in self.config.additional_config.items():
-                if hasattr(ragas_run_config, key):
-                    setattr(ragas_run_config, key, value)
+        # for now, inline evals are hardcoded to run with max_workers=1
+        ragas_run_config = RunConfig(max_workers=1)
 
         llm_wrapper = LlamaStackInlineLLM(
             self.inference_api, model_id, sampling_params, run_config=ragas_run_config
@@ -159,12 +156,12 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
             metrics=metrics,
             llm=llm_wrapper,
             embeddings=embeddings_wrapper,
-            experiment_name=self.config.experiment_name,
+            experiment_name=self.config.ragas_config.experiment_name,
             run_config=ragas_run_config,
-            raise_exceptions=self.config.raise_exceptions,
-            column_map=self.config.column_map,
-            show_progress=self.config.show_progress,
-            batch_size=self.config.batch_size,
+            raise_exceptions=self.config.ragas_config.raise_exceptions,
+            column_map=self.config.ragas_config.column_map,
+            show_progress=self.config.ragas_config.show_progress,
+            batch_size=self.config.ragas_config.batch_size,
         )
         result_df = result.to_pandas()
         table_output = render_dataframe_as_table(result_df, "Ragas Evaluation Results")
