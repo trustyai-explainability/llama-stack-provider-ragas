@@ -1,13 +1,10 @@
 # TODO: decide how to treat these imports & possibly an extras_require
-import io
 import logging
 import os
 import uuid
 from typing import Any, Dict, List, Optional
 
-import boto3
 import pandas as pd
-from botocore.exceptions import ClientError
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
 from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
@@ -16,6 +13,7 @@ from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
 
 from llama_stack_provider_ragas.config import RagasProviderRemoteConfig
 from llama_stack_provider_ragas.errors import RagasEvaluationError
+from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
 
 logger = logging.getLogger(__name__)
 
@@ -180,56 +178,19 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             return job
 
     async def _fetch_kubeflow_results(self, job: RagasEvaluationJob) -> None:
-        # TODO: this does not work yet
-        run_detail = self.kfp_client.get_run(job.kubeflow_run_id)
-
-        pipeline_name = run_detail.pipeline_spec.pipeline_info.name
-
-        ragas_eval_task_id = None
-        for task_detail in run_detail.run_details.task_details:
-            if task_detail.display_name == "run-ragas-evaluation":
-                ragas_eval_task_id = task_detail.task_id
-                break
-
-        if not ragas_eval_task_id:
-            raise RagasEvaluationError(
-                f"Could not find 'run-ragas-evaluation' task in run {job.kubeflow_run_id}"
-            )
-
-        bucket = "public-rhods"  # TODO: make this configurable
-        key = f"{pipeline_name}/{job.kubeflow_run_id}/run-ragas-evaluation/{ragas_eval_task_id}/output_results"
-        s3_client = boto3.client("s3")
+        """Fetch results directly from S3."""
+        s3_url = "s3://public-rhods/ragas-evaluation-pipeline/results.jsonl"
 
         try:
-            response = s3_client.get_object(Bucket=bucket, Key=key)
-            artifact_content = response["Body"].read().decode("utf-8")
-        except ClientError as e:
-            logger.warning(
-                f"Failed to fetch from constructed path, trying to discover: {e}"
+            df = pd.read_json(s3_url, lines=True)
+            logger.info(f"Successfully fetched results from {s3_url}")
+        except Exception as e:
+            raise RagasEvaluationError(
+                f"Failed to fetch results from {s3_url}: {str(e)}"
             )
 
-            prefix = f"{pipeline_name}/{job.kubeflow_run_id}/"
-            paginator = s3_client.get_paginator("list_objects_v2")
-
-            found_key = None
-            for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-                for obj in page.get("Contents", []):
-                    if obj["Key"].endswith("/output_results"):
-                        found_key = obj["Key"]
-                        break
-                if found_key:
-                    break
-
-            if found_key:
-                logger.info(f"Found results at: s3://{bucket}/{found_key}")
-                response = s3_client.get_object(Bucket=bucket, Key=found_key)
-                artifact_content = response["Body"].read().decode("utf-8")
-            else:
-                raise RagasEvaluationError(
-                    f"Could not find output_results artifact in S3 for run {job.kubeflow_run_id}"
-                )
-
-        df = pd.read_json(io.StringIO(artifact_content), lines=True)
+        table_output = render_dataframe_as_table(df, "Fetched Evaluation Results")
+        logger.info(f"Fetched Evaluation Results:\n{table_output}")
 
         # TODO: move the rest into a conversion function
         generation_columns = [
