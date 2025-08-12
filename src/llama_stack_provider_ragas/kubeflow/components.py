@@ -25,7 +25,7 @@ def retrieve_data_from_llama_stack(
 
 @dsl.component(
     base_image=os.environ["KUBEFLOW_BASE_IMAGE"],
-    packages_to_install=["s3fs"],
+    packages_to_install=["s3fs", "kubernetes"],
 )
 def run_ragas_evaluation(
     model: str,
@@ -36,25 +36,12 @@ def run_ragas_evaluation(
     input_dataset: dsl.Input[dsl.Dataset],
     output_results: dsl.Output[dsl.Dataset],
 ):
+    import base64
     import logging
     import os
 
-    # Set AWS credentials from mounted secret
-    def set_aws_credentials_from_volume():
-        credentials_path = "/etc/aws-credentials"
-        try:
-            with open(f"{credentials_path}/AWS_ACCESS_KEY_ID", "r") as f:
-                os.environ["AWS_ACCESS_KEY_ID"] = f.read().strip()
-            with open(f"{credentials_path}/AWS_SECRET_ACCESS_KEY", "r") as f:
-                os.environ["AWS_SECRET_ACCESS_KEY"] = f.read().strip()
-            with open(f"{credentials_path}/AWS_DEFAULT_REGION", "r") as f:
-                os.environ["AWS_DEFAULT_REGION"] = f.read().strip()
-        except FileNotFoundError as e:
-            logging.warning(f"AWS credentials file not found: {e}")
-
-    set_aws_credentials_from_volume()
-
     import pandas as pd
+    from kubernetes import client, config
     from ragas import EvaluationDataset, evaluate
     from ragas.dataset_schema import EvaluationResult
     from ragas.run_config import RunConfig
@@ -65,6 +52,24 @@ def run_ragas_evaluation(
         LlamaStackRemoteEmbeddings,
         LlamaStackRemoteLLM,
     )
+
+    def set_aws_credentials_from_k8s_secret():
+        config.load_incluster_config()
+        v1 = client.CoreV1Api()
+        secret = v1.read_namespaced_secret(
+            name="aws-credentials", namespace="ragas-eval-v3"
+        )
+
+        required_keys = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"]
+        missing_keys = [key for key in required_keys if key not in secret.data]
+        
+        if missing_keys:
+            raise ValueError(f"Missing required AWS credentials in secret: {missing_keys}")
+
+        for key in required_keys:
+            os.environ[key] = base64.b64decode(secret.data[key]).decode("utf-8")
+
+    set_aws_credentials_from_k8s_secret()
 
     logger = logging.getLogger(__name__)
 

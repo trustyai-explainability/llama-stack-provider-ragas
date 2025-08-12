@@ -34,11 +34,6 @@ def ragas_evaluation_pipeline(
         metrics=metrics,
         llama_stack_base_url=llama_stack_base_url,
     )
-    kubernetes.use_secret_as_volume(
-        ragas_result,
-        secret_name="aws-credentials",
-        mount_path="/etc/aws-credentials"
-    )
     # TODO: need to store the ragas_result.uri to later retrieve the results
 
 
