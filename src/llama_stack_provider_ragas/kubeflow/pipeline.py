@@ -34,6 +34,15 @@ def ragas_evaluation_pipeline(
         metrics=metrics,
         llama_stack_base_url=llama_stack_base_url,
     )
+    kubernetes.use_secret_as_env(
+        ragas_result,
+        secret_name="aws-credentials",
+        secret_key_to_env={
+            "AWS_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
+            "AWS_DEFAULT_REGION": "AWS_DEFAULT_REGION",
+        },
+    )
     # TODO: need to store the ragas_result.uri to later retrieve the results
 
 
