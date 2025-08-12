@@ -148,15 +148,9 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         scoring_functions: List[str],
         benchmark_config: BenchmarkConfig,
     ) -> EvaluateResponse:
-        """Evaluate individual rows (not implemented for remote - use run_eval instead)."""
-        raise NotImplementedError(
-            "evaluate_rows is not supported for remote Kubeflow execution. "
-            "Use run_eval with a registered benchmark instead."
-        )
+        raise NotImplementedError("Not implemented yet -- use run_eval instead")
 
     async def job_status(self, benchmark_id: str, job_id: str) -> Job:
-        """Get the status of a Kubeflow pipeline run."""
-
         # TODO: replace inmem dict with kubeflow client
         if (job := self.evaluation_jobs.get(job_id)) is None:
             raise RagasEvaluationError(f"Job {job_id} not found")
