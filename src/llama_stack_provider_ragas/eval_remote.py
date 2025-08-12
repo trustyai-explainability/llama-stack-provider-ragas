@@ -1,11 +1,17 @@
+# TODO: decide how to treat these imports & possibly an extras_require
+import io
 import logging
 import os
 import uuid
 from typing import Any, Dict, List, Optional
 
+import boto3
+import pandas as pd
+from botocore.exceptions import ClientError
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
 from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
+from llama_stack.apis.scoring import ScoringResult
 from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
 
 from llama_stack_provider_ragas.config import RagasProviderRemoteConfig
@@ -15,8 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 class RagasEvaluationJob(Job):
-    """Ragas evaluation job for remote execution."""
-
     result: EvaluateResponse | None
     kubeflow_run_id: Optional[str] = None
     pipeline_status: Optional[str] = None
@@ -182,24 +186,11 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             return job
 
     async def _fetch_kubeflow_results(self, job: RagasEvaluationJob) -> None:
-        """Fetch results from completed Kubeflow pipeline run."""
-        import io
-
-        import pandas as pd
-        from llama_stack.apis.eval import EvaluateResponse
-        from llama_stack.apis.scoring import ScoringResult
-
-        logger.info(f"Fetching results for Kubeflow run {job.kubeflow_run_id}")
-
-        # Get run details to find the pipeline name and task IDs
+        # TODO: this does not work yet
         run_detail = self.kfp_client.get_run(job.kubeflow_run_id)
 
-        # Extract pipeline name
-        pipeline_name = (
-            run_detail.pipeline_spec.pipeline_info.name
-        )  # 'ragas-evaluation-pipeline'
+        pipeline_name = run_detail.pipeline_spec.pipeline_info.name
 
-        # Find the task_id for 'run-ragas-evaluation' component
         ragas_eval_task_id = None
         for task_detail in run_detail.run_details.task_details:
             if task_detail.display_name == "run-ragas-evaluation":
@@ -211,23 +202,14 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 f"Could not find 'run-ragas-evaluation' task in run {job.kubeflow_run_id}"
             )
 
-        # Construct the S3 path and download artifact
-        import boto3
-        from botocore.exceptions import ClientError
-
-        bucket = "public-rhods"
+        bucket = "public-rhods"  # TODO: make this configurable
         key = f"{pipeline_name}/{job.kubeflow_run_id}/run-ragas-evaluation/{ragas_eval_task_id}/output_results"
-
-        logger.info(f"Fetching results from S3: s3://{bucket}/{key}")
-
-        # Create S3 client and download the artifact
         s3_client = boto3.client("s3")
 
         try:
             response = s3_client.get_object(Bucket=bucket, Key=key)
             artifact_content = response["Body"].read().decode("utf-8")
         except ClientError as e:
-            # If the specific path fails, try to discover the correct path
             logger.warning(
                 f"Failed to fetch from constructed path, trying to discover: {e}"
             )
@@ -253,10 +235,9 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                     f"Could not find output_results artifact in S3 for run {job.kubeflow_run_id}"
                 )
 
-        # Read JSONL using pandas
         df = pd.read_json(io.StringIO(artifact_content), lines=True)
 
-        # Extract generations (original data without scores)
+        # TODO: move the rest into a conversion function
         generation_columns = [
             "user_input",
             "response",
@@ -265,7 +246,6 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         ]
         generations = df[generation_columns].to_dict("records")
 
-        # Extract scores for each metric
         metric_columns = [col for col in df.columns if col in self.config.metric_names]
         scores = {}
 
@@ -285,7 +265,6 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 },
             )
 
-        # Create the final EvaluateResponse
         job.result = EvaluateResponse(generations=generations, scores=scores)
 
         logger.info(
