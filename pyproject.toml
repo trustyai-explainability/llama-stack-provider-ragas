@@ -7,7 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "llama-stack==0.2.11",
     "ragas==0.3.0",
-    "kfp>=2.5.0", # maybe this should be in an extra?
+    "pandas==2.3.0",
+    "pyarrow==20.0.0",
+
+    # maybe these should be in an extra?
+    "kfp>=2.5.0", 
+    "kfp-kubernetes>=2.0.0",
+    "s3fs>=2024.12.0",
 ]
 
 [project.optional-dependencies]

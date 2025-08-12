@@ -23,10 +23,7 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(
-    base_image=os.environ["KUBEFLOW_BASE_IMAGE"],
-    packages_to_install=["s3fs"],
-)
+@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,
