@@ -28,7 +28,6 @@ Clone and use `uv` (see below). I will update this README with alternative instr
     ```bash
     uv venv 
     source .venv/bin/activate
-    uv sync
     ```
 
 3. Install as an editable package. There's `distro` and `dev` optional dependencies to run the sample LS distribution:
@@ -39,18 +38,27 @@ Clone and use `uv` (see below). I will update this README with alternative instr
 
 ## Usage
 
-### Basic Usage
-See the [demo notebook](demos/ragas_evaluation_demo.ipynb) for a complete example of using the Ragas provider with Llama Stack.
+### Inline provider
+This version of the provider runs the Ragas evaluation in the same process as the Llama Stack server.
 
-### Configuration
+### Remote provider
+This version of the provider runs the Ragas evaluation in a remote process, using Kubeflow Pipelines.
 
-See config params in the `run.yaml` file. These are still changing.
+You will need:
 
-## Documentation
+- a Llama Stack server running locally
+- a Kubeflow Pipelines server
+- a `.env` file with the following variables:
+```
+KUBEFLOW_PIPELINES_ENDPOINT=[...] # get this via oc get routes -A | grep -i pipeline
+KUBEFLOW_NAMESPACE=[...] # this is the name of the data science project
+LLAMA_STACK_URL=[...] # this is the url of the llama stack server -- use ngrok with a locally running llama stack server
+KUBEFLOW_BASE_IMAGE=quay.io/diegosquayorg/my-ragas-provider-image:latest # see Containerfile for details
+```
 
-- **[Contributing Guide](CONTRIBUTING.md)**: Detailed development setup and workflow
-- **[Demo Notebook](demos/ragas_evaluation_demo.ipynb)**: Usage examples
 
-## License
 
-This p
+
+
+
+
