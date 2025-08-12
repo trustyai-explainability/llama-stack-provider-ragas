@@ -23,7 +23,10 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(
+    base_image=os.environ["KUBEFLOW_BASE_IMAGE"],
+    packages_to_install=["s3fs"],
+)
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,
@@ -34,6 +37,22 @@ def run_ragas_evaluation(
     output_results: dsl.Output[dsl.Dataset],
 ):
     import logging
+    import os
+
+    # Set AWS credentials from mounted secret
+    def set_aws_credentials_from_volume():
+        credentials_path = "/etc/aws-credentials"
+        try:
+            with open(f"{credentials_path}/AWS_ACCESS_KEY_ID", "r") as f:
+                os.environ["AWS_ACCESS_KEY_ID"] = f.read().strip()
+            with open(f"{credentials_path}/AWS_SECRET_ACCESS_KEY", "r") as f:
+                os.environ["AWS_SECRET_ACCESS_KEY"] = f.read().strip()
+            with open(f"{credentials_path}/AWS_DEFAULT_REGION", "r") as f:
+                os.environ["AWS_DEFAULT_REGION"] = f.read().strip()
+        except FileNotFoundError as e:
+            logging.warning(f"AWS credentials file not found: {e}")
+
+    set_aws_credentials_from_volume()
 
     import pandas as pd
     from ragas import EvaluationDataset, evaluate
@@ -77,4 +96,8 @@ def run_ragas_evaluation(
     df_output = ragas_output.to_pandas()
     table_output = render_dataframe_as_table(df_output, "Ragas Evaluation Results")
     logger.info(f"Ragas evaluation completed:\n{table_output}")
+
+    s3_location = "s3://public-rhods/ragas-evaluation-pipeline/results.jsonl"
+    df_output.to_json(s3_location, orient="records", lines=True)
+
     df_output.to_json(output_results.path, orient="records", lines=True)
