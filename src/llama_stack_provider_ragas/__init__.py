@@ -2,20 +2,20 @@ from typing import Any, Dict
 
 from llama_stack.distribution.datatypes import Api
 
-from .config import RagasEvalProviderConfig
+from .config import RagasProviderInlineConfig, RagasProviderRemoteConfig
 from .eval_inline import RagasEvaluatorInline
 from .eval_remote import RagasEvaluatorRemote
 
 
 async def get_adapter_impl(
-    config: RagasEvalProviderConfig,
+    config: RagasProviderRemoteConfig,
     deps: Dict[Api, Any],
 ) -> RagasEvaluatorRemote:
-    return RagasEvaluatorRemote(config, deps[Api.datasetio], deps[Api.inference])
+    return RagasEvaluatorRemote(config)
 
 
 async def get_provider_impl(
-    config: RagasEvalProviderConfig,
+    config: RagasProviderInlineConfig,
     deps: Dict[Api, Any],
 ) -> RagasEvaluatorInline:
     return RagasEvaluatorInline(config, deps[Api.datasetio], deps[Api.inference])
