@@ -2,4 +2,4 @@ module: llama_stack_provider_ragas
 config_class: llama_stack_provider_ragas.config.RagasEvalProviderConfig
 pip_packages: ["ragas"] #, ["datasets", "langchain-core"] # TODO: i think i need to add these
 api_dependencies: ["inference", "datasetio"]
-optional_api_dependencies: [] 
+optional_api_dependencies: []
