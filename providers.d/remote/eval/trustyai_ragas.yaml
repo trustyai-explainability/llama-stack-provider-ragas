@@ -4,4 +4,4 @@ adapter:
   config_class: llama_stack_provider_ragas.config.RagasEvalProviderConfig
   module: llama_stack_provider_ragas
 api_dependencies: ["inference", "datasetio"]
-optional_api_dependencies: [] 
+optional_api_dependencies: []

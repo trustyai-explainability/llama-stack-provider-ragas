@@ -2,7 +2,6 @@
 
 ⚠️ Warning! This project is in early stages of development!
 
-
 ## About
 This repository implements [Ragas](https://github.com/explodinggradients/ragas) as an out-of-tree Llama Stack evaluation provider. Ragas is a toolkit for evaluating and optimizing Large Language Model (LLM) applications with objective metrics.
 
@@ -47,6 +46,11 @@ See the [demo notebook](demos/ragas_evaluation_demo.ipynb) for a complete exampl
 
 See config params in the `run.yaml` file. These are still changing.
 
+## Documentation
+
+- **[Contributing Guide](CONTRIBUTING.md)**: Detailed development setup and workflow
+- **[Demo Notebook](demos/ragas_evaluation_demo.ipynb)**: Usage examples
+
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This p
