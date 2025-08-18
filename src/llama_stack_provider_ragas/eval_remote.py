@@ -1,10 +1,11 @@
 # TODO: decide how to treat these imports & possibly an extras_require
 import logging
-import os
+import subprocess
 import uuid
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import requests
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
 from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
@@ -35,17 +36,53 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         self.evaluation_jobs: Dict[str, RagasEvaluationJob] = {}
         self.benchmarks: Dict[str, Benchmark] = {}
         try:
-            from kfp import Client
+            import kfp
 
-            token = os.popen("oc whoami -t").read().strip()
-            self.kfp_client = Client(
+            result = subprocess.run(
+                ["oc", "whoami", "-t"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=5,
+            )
+            token = result.stdout.strip()
+            if not token:
+                raise RagasEvaluationError(
+                    "No token found. Please run `oc login` and try again."
+                )
+
+            # the kfp.Client handles the healthz endpoint poorly, run a pre-flight check manually
+            response = requests.get(
+                f"{self.config.kubeflow_config.pipelines_endpoint}/apis/v2beta1/healthz",
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {token}",
+                },
+                timeout=5,
+            )
+            response.raise_for_status()
+
+            self.kfp_client = kfp.Client(
                 host=self.config.kubeflow_config.pipelines_endpoint,
                 existing_token=token,
             )
-        except ImportError:
+        except ImportError as e:
             raise RagasEvaluationError(
-                "Kubeflow Pipelines SDK not available. Install with: pip install -e .[remote]"
-            )
+                "Kubeflow Pipelines SDK not available. Install with: pip install .[remote]"
+            ) from e
+        except subprocess.CalledProcessError as e:
+            raise RagasEvaluationError(
+                f"Failed to get OpenShift token. Command failed with exit code {e.returncode}: {e.stderr.strip()}"
+            ) from e
+        except requests.exceptions.RequestException as e:
+            raise RagasEvaluationError(
+                f"Failed to connect to Kubeflow Pipelines server at {self.config.kubeflow_config.pipelines_endpoint}, "
+                "do you need a new token?"
+            ) from e
+        except Exception as e:
+            raise RagasEvaluationError(
+                "Failed to initialize Kubeflow Pipelines client."
+            ) from e
 
     async def run_eval(
         self,
