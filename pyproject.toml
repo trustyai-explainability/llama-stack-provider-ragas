@@ -11,6 +11,8 @@ dependencies = [
 
 [project.optional-dependencies]
 distro = ["opentelemetry-api", "opentelemetry-exporter-otlp", "aiosqlite", "ollama", "uvicorn"]
+
+[dependency-groups]
 dev = [
     "pytest",
     "pytest-asyncio",
