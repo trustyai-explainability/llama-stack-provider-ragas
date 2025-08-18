@@ -50,3 +50,7 @@ See config params in the `run.yaml` file. These are still changing.
 
 - **[Contributing Guide](CONTRIBUTING.md)**: Detailed development setup and workflow
 - **[Demo Notebook](demos/ragas_evaluation_demo.ipynb)**: Usage examples
+
+## License
+
+This p
