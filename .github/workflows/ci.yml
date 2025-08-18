@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  UV_VERSION: "1.0.0"
+  UV_VERSION: "0.8.11"
 
 jobs:
   pre-commit:
