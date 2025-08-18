@@ -46,3 +46,7 @@ See the [demo notebook](demos/ragas_evaluation_demo.ipynb) for a complete exampl
 ### Configuration
 
 See config params in the `run.yaml` file. These are still changing.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
