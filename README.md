@@ -3,7 +3,7 @@
 ⚠️ Warning! This project is in early stages of development!
 
 ## About
-This repository implements [Ragas](https://github.com/explodinggradients/ragas) as an out-of-tree [Llama Stack](https://github.com/meta-llama/llama-stack) evaluation provider. 
+This repository implements [Ragas](https://github.com/explodinggradients/ragas) as an out-of-tree [Llama Stack](https://github.com/meta-llama/llama-stack) evaluation provider.
 
 ## Features
 The goal is to provide all of Ragas' evaluation functionality over Llama Stack's eval API, while leveraging the Llama Stack's built-in APIs for inference (llms and embeddings), datasets, and benchmarks.
@@ -26,7 +26,7 @@ There are two versions of the provider:
 
 - Create and activate a virtual environment
     ```bash
-    uv venv 
+    uv venv
     source .venv/bin/activate
     ```
 
@@ -55,9 +55,3 @@ There are two versions of the provider:
 
 ## Usage
 See the demos in the `demos` directory.
-
-
-
-
-
-

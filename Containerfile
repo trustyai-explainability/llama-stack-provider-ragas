@@ -5,5 +5,4 @@ WORKDIR /usr/local/src/kfp/components
 
 COPY . .
 
-RUN pip install --no-cache-dir -e . 
-
+RUN pip install --no-cache-dir -e .

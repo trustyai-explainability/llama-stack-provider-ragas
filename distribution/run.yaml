@@ -3,7 +3,7 @@ image_name: trustyai_ragas_distro
 apis:
   - eval
   - inference
-  - telemetry 
+  - telemetry
   - datasetio
 providers:
   eval:
@@ -35,7 +35,7 @@ providers:
         kvstore:
           type: sqlite
           namespace: null
-          db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/trustyai_ragas_distro}/localfs_datasetio.db        
+          db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/trustyai_ragas_distro}/localfs_datasetio.db
   inference:
     - provider_id: ollama
       provider_type: remote::ollama
