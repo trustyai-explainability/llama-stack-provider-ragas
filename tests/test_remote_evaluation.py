@@ -1,6 +1,7 @@
 """Integration tests for Ragas evaluation using remote Llama Stack wrappers."""
 
 import logging
+import os
 
 import pytest
 from ragas import evaluate
@@ -8,6 +9,7 @@ from ragas.evaluation import EvaluationResult
 from ragas.metrics import answer_relevancy
 from ragas.run_config import RunConfig
 
+from llama_stack_provider_ragas.config import KubeflowConfig, RagasProviderRemoteConfig
 from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
 from llama_stack_provider_ragas.wrappers_remote import (
     LlamaStackRemoteEmbeddings,
@@ -20,20 +22,37 @@ pytestmark = pytest.mark.integration_test
 
 
 @pytest.fixture
-def remote_llm(eval_config):
-    """Remote LLM wrapper for evaluation."""
-    return LlamaStackRemoteLLM(
-        base_url="http://localhost:8321",
-        model_id=eval_config.model,
-        sampling_params=eval_config.sampling_params,
+def remote_eval_config():
+    return RagasProviderRemoteConfig(
+        model="granite3.3:2b",
+        sampling_params={"temperature": 0.1, "max_tokens": 100},
+        embedding_model="all-MiniLM-L6-v2",
+        metric_names=["answer_relevancy"],
+        kubeflow_config=KubeflowConfig(
+            pipelines_endpoint=os.environ["KUBEFLOW_PIPELINES_ENDPOINT"],
+            namespace=os.environ["KUBEFLOW_NAMESPACE"],
+            llama_stack_url=os.environ["LLAMA_STACK_URL"],
+            base_image=os.environ["KUBEFLOW_BASE_IMAGE"],
+        ),
     )
 
 
 @pytest.fixture
-def remote_embeddings(eval_config):
+def remote_llm(remote_eval_config):
+    """Remote LLM wrapper for evaluation."""
+    return LlamaStackRemoteLLM(
+        base_url="http://localhost:8321",
+        model_id=remote_eval_config.model,
+        sampling_params=remote_eval_config.sampling_params,
+    )
+
+
+@pytest.fixture
+def remote_embeddings(remote_eval_config):
     """Remote embeddings wrapper for evaluation."""
     return LlamaStackRemoteEmbeddings(
-        base_url="http://localhost:8321", embedding_model_id=eval_config.embedding_model
+        base_url="http://localhost:8321",
+        embedding_model_id=remote_eval_config.embedding_model,
     )
 
 
@@ -49,15 +68,19 @@ def test_client_connection(lls_client):
     ],  # , context_precision, faithfulness, context_recall]
 )
 def test_single_metric_evaluation(
-    eval_config, evaluation_dataset, remote_llm, remote_embeddings, metric_to_test
+    remote_eval_config,
+    evaluation_dataset,
+    remote_llm,
+    remote_embeddings,
+    metric_to_test,
 ) -> None:
     result: EvaluationResult = evaluate(
         dataset=evaluation_dataset,
         metrics=[metric_to_test],
         llm=remote_llm,
         embeddings=remote_embeddings,
-        run_config=RunConfig(max_workers=eval_config.ragas_max_workers),
-        show_progress=eval_config.show_progress,
+        run_config=RunConfig(max_workers=1),
+        show_progress=True,
     )
 
     assert isinstance(result, EvaluationResult)

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List, Optional
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
@@ -16,7 +15,7 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
     """Wrapper that makes Llama Stack inference API embeddings compatible with Ragas."""
 
     def __init__(
-        self, inference_api, embedding_model_id, run_config: Optional[RunConfig] = None
+        self, inference_api, embedding_model_id, run_config: RunConfig | None = None
     ):
         super().__init__()
         self.inference_api = inference_api
@@ -25,19 +24,19 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
             run_config = RunConfig()
         self.set_run_config(run_config)
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str) -> list[float]:
         """Embed query using asyncio.get_event_loop() to call async version."""
         # TODO: propose a way to configure BaseRagasEmbeddings to use sync or async
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self.aembed_query(text))
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed documents using asyncio.get_event_loop() to call async version."""
         # TODO: propose a way to configure BaseRagasEmbeddings to use sync or async
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self.aembed_documents(texts))
 
-    async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed documents using Llama Stack inference API."""
         try:
             response = await self.inference_api.embeddings(
@@ -45,12 +44,12 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
                 contents=texts,
                 task_type=EmbeddingTaskType.document,
             )
-            return response.embeddings
+            return response.embeddings  # type: ignore
         except Exception as e:
             logger.error(f"Document embedding failed: {str(e)}")
             raise
 
-    async def aembed_query(self, text: str) -> List[float]:
+    async def aembed_query(self, text: str) -> list[float]:
         """Embed query using Llama Stack inference API."""
         try:
             response = await self.inference_api.embeddings(
@@ -58,7 +57,7 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
                 contents=[text],
                 task_type=EmbeddingTaskType.query,
             )
-            return response.embeddings[0]
+            return response.embeddings[0]  # type: ignore
         except Exception as e:
             logger.error(f"Query embedding failed: {str(e)}")
             raise
@@ -109,8 +108,8 @@ class LlamaStackInlineLLM(BaseRagasLLM):
         self,
         prompt: PromptValue,
         n: int = 1,
-        temperature: Optional[float] = None,
-        stop: Optional[List[str]] = None,
+        temperature: float | None = None,
+        stop: list[str] | None = None,
         callbacks=None,
     ) -> LLMResult:
         raise NotImplementedError(
@@ -121,8 +120,8 @@ class LlamaStackInlineLLM(BaseRagasLLM):
         self,
         prompt: PromptValue,
         n: int = 1,
-        temperature: Optional[float] = None,
-        stop: Optional[List[str]] = None,
+        temperature: float | None = None,
+        stop: list[str] | None = None,
         callbacks=None,
     ) -> LLMResult:
         """Asynchronous text generation using Llama Stack inference API."""
@@ -171,7 +170,7 @@ class LlamaStackInlineLLM(BaseRagasLLM):
                         len(response.logprobs) if response.logprobs else 0
                     ),
                 }
-                llm_output["llama_stack_responses"].append(llama_stack_info)
+                llm_output["llama_stack_responses"].append(llama_stack_info)  # type: ignore
 
                 generations.append(Generation(text=response.content))
 
