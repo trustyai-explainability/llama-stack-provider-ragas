@@ -1,5 +1,4 @@
 import json
-from typing import Dict, List, Optional
 
 from llama_stack.schema_utils import json_schema_type
 from pydantic import BaseModel, Field, computed_field, field_validator
@@ -11,7 +10,7 @@ from .constants import METRIC_MAPPING
 class RagasConfig(BaseModel):
     """Additional configuration parameters for Ragas evaluation."""
 
-    batch_size: Optional[int] = Field(
+    batch_size: int | None = Field(
         default=None,
         description="Batch size for evaluation. If None, no batching is done.",
     )
@@ -25,11 +24,11 @@ class RagasConfig(BaseModel):
         description="Whether to raise exceptions or return NaN for failed evaluations",
     )
 
-    experiment_name: Optional[str] = Field(
+    experiment_name: str | None = Field(
         default=None, description="Name for experiment tracking"
     )
 
-    column_map: Optional[Dict[str, str]] = Field(
+    column_map: dict[str, str] | None = Field(
         default=None, description="Mapping of dataset column names to expected names"
     )
 
@@ -63,7 +62,7 @@ class RagasProviderBaseConfig(BaseModel):
         ),
     )
 
-    metric_names: List[str] = Field(
+    metric_names: list[str] = Field(
         default=[
             "answer_relevancy",
             "context_precision",
@@ -83,8 +82,8 @@ class RagasProviderBaseConfig(BaseModel):
         return v
 
     @property
-    @computed_field(return_type=List[Metric])
-    def metric_functions(self) -> List[Metric]:
+    @computed_field(return_type=list[Metric])
+    def metric_functions(self) -> list[Metric]:
         return [METRIC_MAPPING[metric] for metric in self.metric_names]
 
     ragas_config: RagasConfig = Field(

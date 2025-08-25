@@ -2,7 +2,7 @@
 import logging
 import subprocess
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
 import requests
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 class RagasEvaluationJob(Job):
     result: EvaluateResponse | None
-    kubeflow_run_id: Optional[str] = None
-    pipeline_status: Optional[str] = None
+    kubeflow_run_id: str | None = None
+    pipeline_status: str | None = None
 
 
 class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
@@ -33,8 +33,8 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         config: RagasProviderRemoteConfig,
     ):
         self.config = config
-        self.evaluation_jobs: Dict[str, RagasEvaluationJob] = {}
-        self.benchmarks: Dict[str, Benchmark] = {}
+        self.evaluation_jobs: dict[str, RagasEvaluationJob] = {}
+        self.benchmarks: dict[str, Benchmark] = {}
         try:
             import kfp
 
@@ -130,7 +130,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
 
         except Exception as e:
             logger.error(f"Failed to submit evaluation job: {str(e)}")
-            raise RagasEvaluationError(f"Failed to submit evaluation: {str(e)}")
+            raise RagasEvaluationError(f"Failed to submit evaluation: {str(e)}") from e
 
     async def _submit_to_kubeflow(
         self,
@@ -179,8 +179,8 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
     async def evaluate_rows(
         self,
         benchmark_id: str,
-        input_rows: List[Dict[str, Any]],
-        scoring_functions: List[str],
+        input_rows: list[dict[str, Any]],
+        scoring_functions: list[str],
         benchmark_config: BenchmarkConfig,
     ) -> EvaluateResponse:
         raise NotImplementedError("Not implemented yet -- use run_eval instead")
@@ -224,7 +224,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         except Exception as e:
             raise RagasEvaluationError(
                 f"Failed to fetch results from {s3_url}: {str(e)}"
-            )
+            ) from e
 
         table_output = render_dataframe_as_table(df, "Fetched Evaluation Results")
         logger.info(f"Fetched Evaluation Results:\n{table_output}")
@@ -283,13 +283,13 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 f"Cancelled Kubeflow run {job.kubeflow_run_id} for job {job_id}"
             )
 
-        except ImportError:
+        except ImportError as e:
             raise RagasEvaluationError(
                 "Kubeflow Pipelines SDK not available. Install with: pip install kfp"
-            )
+            ) from e
         except Exception as e:
             logger.error(f"Failed to cancel job: {str(e)}")
-            raise RagasEvaluationError(f"Failed to cancel job: {str(e)}")
+            raise RagasEvaluationError(f"Failed to cancel job: {str(e)}") from e
 
     async def job_result(
         self, benchmark_id: str, job_id: str

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List  # noqa
 
 from kfp import dsl, kubernetes
 
@@ -14,7 +14,7 @@ def ragas_evaluation_pipeline(
     dataset_id: str,
     sampling_params: dict,
     embedding_model: str,
-    metrics: List[str],
+    metrics: List[str],  # noqa
     llama_stack_base_url: str,
     num_examples: int = -1,
 ):

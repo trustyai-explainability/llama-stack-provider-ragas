@@ -1,7 +1,7 @@
 import asyncio
 import functools as ft
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
@@ -47,8 +47,8 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         self.config = config
         self.datasetio_api = datasetio_api
         self.inference_api = inference_api
-        self.evaluation_jobs: Dict[str, RagasEvaluationJob] = {}
-        self.benchmarks: Dict[str, Benchmark] = {}
+        self.evaluation_jobs: dict[str, RagasEvaluationJob] = {}
+        self.benchmarks: dict[str, Benchmark] = {}
 
     async def run_eval(
         self,
@@ -103,7 +103,7 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         self.evaluation_jobs[job_id] = job
         return job
 
-    def _get_metrics(self, scoring_functions: List[str]) -> List[Metric]:
+    def _get_metrics(self, scoring_functions: list[str]) -> list[Metric]:
         """Get the list of metrics to run based on scoring functions.
 
         Args:
@@ -147,7 +147,7 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         eval_dataset: EvaluationDataset,
         llm_wrapper: LlamaStackInlineLLM,
         embeddings_wrapper: LlamaStackInlineEmbeddings,
-        metrics: List[Metric],
+        metrics: list[Metric],
         ragas_run_config: RunConfig,
     ) -> EvaluateResponse:
         result = await asyncio.to_thread(
@@ -201,8 +201,8 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
     async def evaluate_rows(
         self,
         benchmark_id: str,
-        input_rows: List[Dict[str, Any]],
-        scoring_functions: List[str],
+        input_rows: list[dict[str, Any]],
+        scoring_functions: list[str],
         benchmark_config: BenchmarkConfig,
     ) -> EvaluateResponse:
         """Evaluate a list of rows on a benchmark."""

@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List  # noqa
 
 from dotenv import load_dotenv
 from kfp import dsl
@@ -28,7 +28,7 @@ def run_ragas_evaluation(
     model: str,
     sampling_params: dict,
     embedding_model: str,
-    metrics: List[str],
+    metrics: List[str],  # noqa
     llama_stack_base_url: str,
     input_dataset: dsl.Input[dsl.Dataset],
 ):

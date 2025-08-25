@@ -2,7 +2,7 @@
 
 import os
 from textwrap import dedent
-from typing import List
+from typing import List  # noqa
 
 import kfp
 import pytest
@@ -71,7 +71,7 @@ def run_fake_ragas_evaluation(
     model: str,
     sampling_params: dict,
     embedding_model: str,
-    metrics: List[str],
+    metrics: List[str],  # noqa
     llama_stack_base_url: str,
     input_dataset: dsl.Input[dsl.Dataset],
     output_results: dsl.Output[dsl.Dataset],
@@ -159,7 +159,7 @@ def run_fake_ragas_evaluation(
 def test_pipeline_dummy_dataset_retrieval(kf_client, remote_eval_config):
     @dsl.pipeline()
     def pipline_dataset_retrieval():
-        test_dataset = retrieve_data_for_testing()
+        retrieve_data_for_testing()
 
     run_result = kf_client.create_run_from_pipeline_func(
         pipeline_func=pipline_dataset_retrieval,
@@ -175,7 +175,7 @@ def test_pipeline_dummy_ragas_evaluation(kf_client, remote_eval_config):
     @dsl.pipeline()
     def pipeline_ragas_evaluation():
         test_dataset = retrieve_data_for_testing()
-        eval_result = run_fake_ragas_evaluation(
+        run_fake_ragas_evaluation(
             input_dataset=test_dataset.output,
             model=remote_eval_config.model,
             sampling_params=remote_eval_config.sampling_params,
