@@ -9,6 +9,7 @@ dependencies = [
     "ragas==0.3.0",
     "pandas==2.3.0",
     "pyarrow==20.0.0",
+    "requests==2.32.4",
 ]
 
 [project.optional-dependencies]
