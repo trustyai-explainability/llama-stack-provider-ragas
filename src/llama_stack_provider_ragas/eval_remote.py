@@ -174,7 +174,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             experiment_name="lls-provider-ragas-runs",
         )
 
-        return run_result.run_id
+        return run_result.run_id  # type: ignore
 
     async def evaluate_rows(
         self,

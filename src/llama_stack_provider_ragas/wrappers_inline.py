@@ -44,7 +44,7 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
                 contents=texts,
                 task_type=EmbeddingTaskType.document,
             )
-            return response.embeddings
+            return response.embeddings  # type: ignore
         except Exception as e:
             logger.error(f"Document embedding failed: {str(e)}")
             raise
@@ -57,7 +57,7 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
                 contents=[text],
                 task_type=EmbeddingTaskType.query,
             )
-            return response.embeddings[0]
+            return response.embeddings[0]  # type: ignore
         except Exception as e:
             logger.error(f"Query embedding failed: {str(e)}")
             raise
@@ -170,7 +170,7 @@ class LlamaStackInlineLLM(BaseRagasLLM):
                         len(response.logprobs) if response.logprobs else 0
                     ),
                 }
-                llm_output["llama_stack_responses"].append(llama_stack_info)
+                llm_output["llama_stack_responses"].append(llama_stack_info)  # type: ignore
 
                 generations.append(Generation(text=response.content))
 
