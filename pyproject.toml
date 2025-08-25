@@ -21,10 +21,11 @@ dev = [
     "pytest", 
     "pytest-asyncio", 
     "pytest-cov", 
-    "black", 
-    "isort", 
     "ipykernel", 
-    "rich"
+    "rich",
+    "pre-commit",
+    "ruff",
+    "mypy",
 ]
 
 [tool.pytest.ini_options]
