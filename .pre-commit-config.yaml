@@ -31,4 +31,4 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        args: [-c, 'uv run pytest -v -m "not integration_test" --tb=short --maxfail=3; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret']
+        args: [-c, 'KUBEFLOW_BASE_IMAGE=dummy uv run pytest -v -m "not integration_test" --tb=short --maxfail=3; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret']
