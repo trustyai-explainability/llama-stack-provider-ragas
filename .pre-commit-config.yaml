@@ -10,17 +10,18 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
+    rev: v0.12.10
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.17.1
     hooks:
       - id: mypy
         args: [--ignore-missing-imports, --show-error-codes, --no-strict-optional]
+        additional_dependencies: [types-requests]
 
   - repo: local
     hooks:
@@ -30,4 +31,4 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        args: [-c, 'cd "$(dirname "$0")" && uv run pytest tests/ -v -m "not integration_test" --tb=short --maxfail=3']
+        args: [-c, 'KUBEFLOW_BASE_IMAGE=dummy uv run pytest -v -m "not integration_test" --tb=short --maxfail=3; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret']

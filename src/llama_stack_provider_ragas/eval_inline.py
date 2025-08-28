@@ -1,7 +1,7 @@
 import asyncio
 import functools as ft
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from llama_stack.apis.benchmarks import Benchmark
 from llama_stack.apis.common.job_types import Job, JobStatus
@@ -21,7 +21,7 @@ from ragas.metrics import (
 )
 from ragas.run_config import RunConfig
 
-from .config import RagasEvalProviderConfig
+from .config import RagasProviderInlineConfig
 from .constants import METRIC_MAPPING
 from .errors import RagasEvaluationError
 from .logging_utils import render_dataframe_as_table
@@ -40,15 +40,15 @@ class RagasEvaluationJob(Job):
 class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
     def __init__(
         self,
-        config: RagasEvalProviderConfig,
+        config: RagasProviderInlineConfig,
         datasetio_api: DatasetIO,
         inference_api: Inference,
     ):
         self.config = config
         self.datasetio_api = datasetio_api
         self.inference_api = inference_api
-        self.evaluation_jobs: Dict[str, RagasEvaluationJob] = {}
-        self.benchmarks: Dict[str, Benchmark] = {}
+        self.evaluation_jobs: dict[str, RagasEvaluationJob] = {}
+        self.benchmarks: dict[str, Benchmark] = {}
 
     async def run_eval(
         self,
@@ -65,11 +65,8 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         model_id = benchmark_config.eval_candidate.model
         sampling_params = eval_candidate.sampling_params
 
-        ragas_run_config = RunConfig(max_workers=self.config.ragas_max_workers)
-        if self.config.additional_config:
-            for key, value in self.config.additional_config.items():
-                if hasattr(ragas_run_config, key):
-                    setattr(ragas_run_config, key, value)
+        # for now, inline evals are hardcoded to run with max_workers=1
+        ragas_run_config = RunConfig(max_workers=1)
 
         llm_wrapper = LlamaStackInlineLLM(
             self.inference_api, model_id, sampling_params, run_config=ragas_run_config
@@ -106,7 +103,7 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         self.evaluation_jobs[job_id] = job
         return job
 
-    def _get_metrics(self, scoring_functions: List[str]) -> List[Metric]:
+    def _get_metrics(self, scoring_functions: list[str]) -> list[Metric]:
         """Get the list of metrics to run based on scoring functions.
 
         Args:
@@ -150,7 +147,7 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         eval_dataset: EvaluationDataset,
         llm_wrapper: LlamaStackInlineLLM,
         embeddings_wrapper: LlamaStackInlineEmbeddings,
-        metrics: List[Metric],
+        metrics: list[Metric],
         ragas_run_config: RunConfig,
     ) -> EvaluateResponse:
         result = await asyncio.to_thread(
@@ -159,12 +156,12 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
             metrics=metrics,
             llm=llm_wrapper,
             embeddings=embeddings_wrapper,
-            experiment_name=self.config.experiment_name,
+            experiment_name=self.config.ragas_config.experiment_name,
             run_config=ragas_run_config,
-            raise_exceptions=self.config.raise_exceptions,
-            column_map=self.config.column_map,
-            show_progress=self.config.show_progress,
-            batch_size=self.config.batch_size,
+            raise_exceptions=self.config.ragas_config.raise_exceptions,
+            column_map=self.config.ragas_config.column_map,
+            show_progress=self.config.ragas_config.show_progress,
+            batch_size=self.config.ragas_config.batch_size,
         )
         result_df = result.to_pandas()
         table_output = render_dataframe_as_table(result_df, "Ragas Evaluation Results")
@@ -204,8 +201,8 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
     async def evaluate_rows(
         self,
         benchmark_id: str,
-        input_rows: List[Dict[str, Any]],
-        scoring_functions: List[str],
+        input_rows: list[dict[str, Any]],
+        scoring_functions: list[str],
         benchmark_config: BenchmarkConfig,
     ) -> EvaluateResponse:
         """Evaluate a list of rows on a benchmark."""

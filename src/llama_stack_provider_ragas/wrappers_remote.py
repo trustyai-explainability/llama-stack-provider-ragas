@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
@@ -96,8 +95,8 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
         self,
         base_url: str,
         model_id: str,
-        sampling_params: Optional[dict] = None,
-        run_config: Optional[RunConfig] = None,
+        sampling_params: dict | None = None,
+        run_config: RunConfig | None = None,
         multiple_completion_supported: bool = True,
     ):
         if run_config is None:
@@ -132,7 +131,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
         logger.info("=" * 50)
 
     def _prepare_generation_params(
-        self, prompt: PromptValue, temperature: Optional[float] = None
+        self, prompt: PromptValue, temperature: float | None = None
     ) -> tuple[str, dict]:
         """Prepare prompt text and sampling parameters for generation."""
         prompt_text = prompt.to_string()
@@ -144,7 +143,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
 
         return prompt_text, sampling_params
 
-    def _create_llm_output(self) -> dict:
+    def _initialize_llm_output(self) -> dict:
         """Create initial LLM output structure."""
         return {
             "llama_stack_responses": [],
@@ -166,8 +165,8 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
         self,
         prompt: PromptValue,
         n: int = 1,
-        temperature: Optional[float] = None,
-        stop: Optional[List[str]] = None,
+        temperature: float | None = None,
+        stop: list[str] | None = None,
         callbacks=None,
     ) -> LLMResult:
         """Synchronous text generation using Llama Stack client."""
@@ -176,7 +175,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
                 prompt, temperature
             )
             generations = []
-            llm_output = self._create_llm_output()
+            llm_output = self._initialize_llm_output()
 
             for _ in range(n):
                 response: CompletionResponse = self.sync_client.inference.completion(
@@ -198,8 +197,8 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
         self,
         prompt: PromptValue,
         n: int = 1,
-        temperature: Optional[float] = None,
-        stop: Optional[List[str]] = None,
+        temperature: float | None = None,
+        stop: list[str] | None = None,
         callbacks=None,
     ) -> LLMResult:
         """Asynchronous text generation using Llama Stack client."""
@@ -208,7 +207,7 @@ class LlamaStackRemoteLLM(BaseRagasLLM):
                 prompt, temperature
             )
             generations = []
-            llm_output = self._create_llm_output()
+            llm_output = self._initialize_llm_output()
 
             for _ in range(n):
                 response: CompletionResponse = (

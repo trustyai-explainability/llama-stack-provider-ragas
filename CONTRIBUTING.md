@@ -4,21 +4,8 @@ Thank you for your interest in contributing to the RAGAS provider! This guide wi
 
 ## Quick Start
 
-1. **Setup development environment:**
-   ```bash
-   uv sync --dev
-   pre-commit install
-   ```
-
-2. **Verify setup:**
-   ```bash
-   pre-commit run --all-files
-   ```
-
-## Prerequisites
-
-- Python 3.12+
-- `uv` package manager
+- Review [README.md](README.md) for installation and usage instructions.
+- Make sure you can run the tests (including the integration tests).
 
 ## Development Workflow
 
@@ -83,8 +70,7 @@ The following checks run automatically on every commit:
 ## Available Commands
 
 ```bash
-# Development
-uv sync --dev                    # Install dev dependencies
+# Setup
 pre-commit install              # Install git hooks
 
 # Quality checks
@@ -106,7 +92,7 @@ uv run pytest tests/ --cov=src            # With coverage
 | Issue | Solution |
 |-------|----------|
 | Pre-commit not running | `pre-commit install` |
-| Dependencies out of sync | `uv sync --dev` |
+| Dependencies out of sync | `uv sync --extra dev` |
 | Type checking errors | Check imports and type hints |
 | Test failures | Verify test markers and dependencies |
 | Hook failures | `pre-commit clean && pre-commit autoupdate` |
