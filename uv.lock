@@ -1369,6 +1369,7 @@ dev = [
     { name = "ipykernel" },
     { name = "kfp" },
     { name = "kfp-kubernetes" },
+    { name = "kubernetes" },
     { name = "mypy" },
     { name = "ollama" },
     { name = "opentelemetry-api" },
@@ -1392,6 +1393,7 @@ distro = [
 remote = [
     { name = "kfp" },
     { name = "kfp-kubernetes" },
+    { name = "kubernetes" },
     { name = "s3fs" },
 ]
 
@@ -1401,6 +1403,7 @@ requires-dist = [
     { name = "ipykernel", marker = "extra == 'dev'" },
     { name = "kfp", marker = "extra == 'remote'", specifier = ">=2.5.0" },
     { name = "kfp-kubernetes", marker = "extra == 'remote'", specifier = ">=2.0.0" },
+    { name = "kubernetes", marker = "extra == 'remote'", specifier = ">=30.0.0" },
     { name = "llama-stack", specifier = "==0.2.11" },
     { name = "llama-stack-provider-ragas", extras = ["distro"], marker = "extra == 'dev'" },
     { name = "llama-stack-provider-ragas", extras = ["remote"], marker = "extra == 'dev'" },

@@ -1,6 +1,4 @@
-# TODO: decide how to treat these imports & possibly an extras_require
 import logging
-import subprocess
 import uuid
 from typing import Any
 
@@ -38,14 +36,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         try:
             import kfp
 
-            result = subprocess.run(
-                ["oc", "whoami", "-t"],
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=5,
-            )
-            token = result.stdout.strip()
+            token = self._get_token()
             if not token:
                 raise RagasEvaluationError(
                     "No token found. Please run `oc login` and try again."
@@ -70,10 +61,6 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             raise RagasEvaluationError(
                 "Kubeflow Pipelines SDK not available. Install with: pip install .[remote]"
             ) from e
-        except subprocess.CalledProcessError as e:
-            raise RagasEvaluationError(
-                f"Failed to get OpenShift token. Command failed with exit code {e.returncode}: {e.stderr.strip()}"
-            ) from e
         except requests.exceptions.RequestException as e:
             raise RagasEvaluationError(
                 f"Failed to connect to Kubeflow Pipelines server at {self.config.kubeflow_config.pipelines_endpoint}, "
@@ -83,6 +70,25 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             raise RagasEvaluationError(
                 "Failed to initialize Kubeflow Pipelines client."
             ) from e
+
+    def _get_token(self) -> str:
+        try:
+            from kubernetes.client.configuration import Configuration
+            from kubernetes.config.kube_config import load_kube_config
+
+            config = Configuration()
+            load_kube_config(client_configuration=config)
+            token = str(config.api_key["authorization"].split(" ")[-1])
+        except ImportError as e:
+            raise RagasEvaluationError(
+                "Kubernetes client is not installed. Install with: pip install .[remote]"
+            ) from e
+        except Exception as e:
+            raise RagasEvaluationError(
+                "Failed to get OpenShift token. Please run `oc login` and try again."
+            ) from e
+
+        return token
 
     async def run_eval(
         self,
