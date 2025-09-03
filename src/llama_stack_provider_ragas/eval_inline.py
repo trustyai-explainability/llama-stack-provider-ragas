@@ -10,6 +10,7 @@ from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
 from llama_stack.apis.inference import Inference
 from llama_stack.apis.scoring import ScoringResult
 from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
+from llama_stack.schema_utils import json_schema_type
 from ragas import EvaluationDataset
 from ragas import evaluate as ragas_evaluate
 from ragas.metrics import (
@@ -30,11 +31,20 @@ from .wrappers_inline import LlamaStackInlineEmbeddings, LlamaStackInlineLLM
 logger = logging.getLogger(__name__)
 
 
+@json_schema_type
 class RagasEvaluationJob(Job):
     """Ragas evaluation job. Keeps track of the evaluation result."""
 
     # TODO: maybe propose this change to Job itself
     result: EvaluateResponse | None
+    eval_config: RagasProviderInlineConfig
+
+
+# TODO: maybe unify in __init__.py
+@json_schema_type
+class EmptyEvaluateResponse(EvaluateResponse):
+    generations: list[dict[str, Any]] = []
+    scores: dict[str, ScoringResult] = {}
 
 
 class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
@@ -95,7 +105,10 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
 
         job_id = str(len(self.evaluation_jobs))
         job = RagasEvaluationJob(
-            job_id=job_id, status=JobStatus.in_progress, result=None
+            job_id=job_id,
+            status=JobStatus.in_progress,
+            result=None,
+            eval_config=self.config,
         )
         ragas_evaluation_task.add_done_callback(
             ft.partial(self._handle_evaluation_completion, job)
@@ -220,22 +233,26 @@ class RagasEvaluatorInline(Eval, BenchmarksProtocolPrivate):
         Returns:
             The status of the evaluation job.
         """
-        if job_id not in self.evaluation_jobs:
+        if (job := self.evaluation_jobs.get(job_id)) is None:
             raise RagasEvaluationError(f"Job {job_id} not found")
 
-        return self.evaluation_jobs[job_id]
+        return job
 
     async def job_cancel(self, benchmark_id: str, job_id: str) -> None:
         raise NotImplementedError("Job cancel is not implemented yet")
 
-    async def job_result(
-        self, benchmark_id: str, job_id: str
-    ) -> EvaluateResponse | None:
-        if job_id not in self.evaluation_jobs:
-            raise RagasEvaluationError(f"Job {job_id} not found")
+    async def job_result(self, benchmark_id: str, job_id: str) -> EvaluateResponse:
+        job = await self.job_status(benchmark_id, job_id)
 
-        # TODO: propose to change return type in Eval.job_result
-        return self.evaluation_jobs[job_id].result
+        if job.status == JobStatus.completed:
+            return job.result
+        elif job.status == JobStatus.failed:
+            logger.warning(f"Job {job_id} failed")
+        else:
+            logger.warning(f"Job {job_id} is still running")
+
+        # TODO: propose enhancement to EvaluateResponse to include a status?
+        return EmptyEvaluateResponse()
 
     async def register_benchmark(self, task_def: Benchmark) -> None:
         self.benchmarks[task_def.identifier] = task_def
