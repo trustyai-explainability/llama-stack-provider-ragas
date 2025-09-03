@@ -9,6 +9,7 @@ from llama_stack.apis.common.job_types import Job, JobStatus
 from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
 from llama_stack.apis.scoring import ScoringResult
 from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
+from llama_stack.schema_utils import json_schema_type
 
 from llama_stack_provider_ragas.config import RagasProviderRemoteConfig
 from llama_stack_provider_ragas.errors import RagasEvaluationError
@@ -17,11 +18,17 @@ from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
 logger = logging.getLogger(__name__)
 
 
+@json_schema_type
 class RagasEvaluationJob(Job):
     result: EvaluateResponse | None
     eval_config: RagasProviderRemoteConfig
     kubeflow_run_id: str | None = None
-    pipeline_status: str | None = None
+
+
+@json_schema_type
+class EmptyEvaluateResponse(EvaluateResponse):
+    generations: list[dict[str, Any]] = []
+    scores: dict[str, ScoringResult] = {}
 
 
 class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
@@ -198,9 +205,6 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         if (job := self.evaluation_jobs.get(job_id)) is None:
             raise RagasEvaluationError(f"Job {job_id} not found")
 
-        if job.kubeflow_run_id is None:
-            raise RagasEvaluationError(f"Job {job_id} has no Kubeflow run ID")
-
         try:
             run_detail = self.kfp_client.get_run(job.kubeflow_run_id)
             if run_detail.state == "FAILED":
@@ -215,12 +219,12 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 raise RagasEvaluationError(
                     f"Unknown Kubeflow run state: {run_detail.state}"
                 )
-
-            return job
-
         except Exception as e:
+            # TODO: handle expired token issues
             logger.error(f"Failed to get job status: {str(e)}")
-            return job
+            raise RagasEvaluationError(f"Failed to get job status: {str(e)}") from e
+
+        return job
 
     async def _fetch_kubeflow_results(self, job: RagasEvaluationJob) -> None:
         """Fetch results directly from S3."""
@@ -272,44 +276,31 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         )
 
     async def job_cancel(self, benchmark_id: str, job_id: str) -> None:
-        """Cancel a running Kubeflow pipeline."""
-        if job_id not in self.evaluation_jobs:
+        if (job := self.evaluation_jobs.get(job_id)) is None:
             raise RagasEvaluationError(f"Job {job_id} not found")
-
-        job = self.evaluation_jobs[job_id]
-
-        if not job.kubeflow_run_id:
-            job.job_status = JobStatus.failed
-            return
 
         try:
             self.kfp_client.runs.terminate_run(job.kubeflow_run_id)
-            job.status = JobStatus.failed
-            job.pipeline_status = "cancelled"
-
+            job.status = JobStatus.cancelled
             logger.info(
                 f"Cancelled Kubeflow run {job.kubeflow_run_id} for job {job_id}"
             )
-
-        except ImportError as e:
-            raise RagasEvaluationError(
-                "Kubeflow Pipelines SDK not available. Install with: pip install kfp"
-            ) from e
         except Exception as e:
             logger.error(f"Failed to cancel job: {str(e)}")
             raise RagasEvaluationError(f"Failed to cancel job: {str(e)}") from e
 
-    async def job_result(
-        self, benchmark_id: str, job_id: str
-    ) -> EvaluateResponse | None:
+    async def job_result(self, benchmark_id: str, job_id: str) -> EvaluateResponse:
         job = await self.job_status(benchmark_id, job_id)
 
         if job.status == JobStatus.completed:
             return job.result
         elif job.status == JobStatus.failed:
-            raise RagasEvaluationError(f"Job {job_id} failed")
+            logger.warning(f"Job {job_id} failed")
         else:
-            return None  # Job still running
+            logger.warning(f"Job {job_id} is still running")
+
+        # TODO: propose enhancement to EvaluateResponse to include a status?
+        return EmptyEvaluateResponse()
 
     async def register_benchmark(self, task_def: Benchmark) -> None:
         """Register a benchmark for evaluation."""
