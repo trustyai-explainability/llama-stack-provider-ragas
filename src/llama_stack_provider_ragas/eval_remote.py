@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class RagasEvaluationJob(Job):
     result: EvaluateResponse | None
+    eval_config: RagasProviderRemoteConfig
     kubeflow_run_id: str | None = None
     pipeline_status: str | None = None
 
@@ -116,6 +117,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 result=None,
                 kubeflow_run_id=None,
                 pipeline_status="submitted",
+                eval_config=self.config,
             )
 
             kubeflow_run_id = await self._submit_to_kubeflow(
