@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remote-ragas-config
+data:
+  KUBEFLOW_PIPELINES_ENDPOINT: <your-kubeflow-pipelines-endpoint> # See project README.md for details
+  KUBEFLOW_NAMESPACE: <your-kubeflow-namespace> # See project README.md for details
+  KUBEFLOW_BASE_IMAGE: <your-kubeflow-base-image> # See project README.md for details
+  LLAMA_STACK_URL: "http://lsd-ragas-example-service:8321" # must match the distribution's service name by default it is <distribution-name>-service
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kube-token-secret
+type: Opaque
+stringData:
+  kube-token: <your-kube-token>
+---
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: lsd-ragas-example
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      resources:
+        requests:
+          cpu: 4
+          memory: "12Gi"
+        limits:
+          cpu: 6
+          memory: "14Gi"
+      env:
+        - name: INFERENCE_MODEL
+          valueFrom:
+            secretKeyRef:
+              key: INFERENCE_MODEL
+              name: llama-stack-inference-model-secret
+              optional: true
+        - name: VLLM_MAX_TOKENS
+          value: "4096"
+        - name: VLLM_URL
+          valueFrom:
+            secretKeyRef:
+              key: VLLM_URL
+              name: llama-stack-inference-model-secret
+              optional: true
+        - name: VLLM_TLS_VERIFY
+          valueFrom:
+            secretKeyRef:
+              key: VLLM_TLS_VERIFY
+              name: llama-stack-inference-model-secret
+              optional: true
+        - name: VLLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: VLLM_API_TOKEN
+              name: llama-stack-inference-model-secret
+              optional: true
+        - name: MILVUS_DB_PATH
+          value: ~/milvus.db
+        - name: FMS_ORCHESTRATOR_URL
+          value: "http://localhost"
+        - name: KUBEFLOW_PIPELINES_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: KUBEFLOW_PIPELINES_ENDPOINT
+              name: remote-ragas-config
+              optional: true
+        - name: KUBEFLOW_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              key: KUBEFLOW_NAMESPACE
+              name: remote-ragas-config
+              optional: true
+        - name: KUBEFLOW_BASE_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: KUBEFLOW_BASE_IMAGE
+              name: remote-ragas-config
+              optional: true
+        - name: KUBE_TOKEN # Required for using the Llama Stack Distribution method to run the Ragas evaluation
+          valueFrom:
+            secretKeyRef:
+              key: kube-token
+              name: kube-token-secret
+              optional: true
+        - name: LLAMA_STACK_URL
+          valueFrom:
+            configMapKeyRef:
+              key: LLAMA_STACK_URL
+              name: remote-ragas-config
+              optional: false
+      name: llama-stack
+      port: 8321
+    distribution:
+      image: <your-distribution-image> # See BUILD_DISTRO.md for details
