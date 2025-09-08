@@ -80,6 +80,10 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             ) from e
 
     def _get_token(self) -> str:
+        import os
+        if os.environ.get("KUBE_TOKEN"):
+            logger.info("Using KUBE_TOKEN environment variable")
+            return os.environ["KUBE_TOKEN"]
         try:
             from kubernetes.client.configuration import Configuration
             from kubernetes.config.kube_config import load_kube_config
