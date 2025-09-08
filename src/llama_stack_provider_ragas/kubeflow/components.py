@@ -31,6 +31,7 @@ def run_ragas_evaluation(
     metrics: List[str],  # noqa
     llama_stack_base_url: str,
     input_dataset: dsl.Input[dsl.Dataset],
+    result_s3_location: str,
 ):
     import logging
 
@@ -77,5 +78,4 @@ def run_ragas_evaluation(
     table_output = render_dataframe_as_table(df_output, "Ragas Evaluation Results")
     logger.info(f"Ragas evaluation completed:\n{table_output}")
 
-    s3_location = "s3://public-rhods/ragas-evaluation-pipeline/results.jsonl"
-    df_output.to_json(s3_location, orient="records", lines=True)
+    df_output.to_json(result_s3_location, orient="records", lines=True)
