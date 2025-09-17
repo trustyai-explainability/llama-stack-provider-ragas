@@ -48,6 +48,7 @@ def run_ragas_evaluation(
     )
 
     logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
     llm = LlamaStackRemoteLLM(
         base_url=llama_stack_base_url,
@@ -78,4 +79,5 @@ def run_ragas_evaluation(
     table_output = render_dataframe_as_table(df_output, "Ragas Evaluation Results")
     logger.info(f"Ragas evaluation completed:\n{table_output}")
 
+    logger.info(f"Saving results to {result_s3_location}")
     df_output.to_json(result_s3_location, orient="records", lines=True)
