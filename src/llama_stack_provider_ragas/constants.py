@@ -20,3 +20,5 @@ METRIC_MAPPING = {
         # "rouge_score": RougeScore(),
     ]
 }
+
+AVAILABLE_METRICS = list(METRIC_MAPPING.keys())

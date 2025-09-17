@@ -43,7 +43,7 @@ There are two versions of the provider:
 
 ### Remote provider
 - Create a `.env` file with the following:
-    - `LLAMA_STACK_URL`
+    - `KUBEFLOW_LLAMA_STACK_URL`
         - This is the url of the llama stack server that the remote provider will use to run the evaluation (LLM generations and embeddings, etc.). If you are running Llama Stack locally, you can use [ngrok](https://ngrok.com/) to expose it to the remote provider.
     - `KUBEFLOW_PIPELINES_ENDPOINT`
         - You can get this via `kubectl get routes -A | grep -i pipeline` on your Kubernetes cluster.
