@@ -1,7 +1,5 @@
 # `trustyai-ragas` <br> Ragas as an Out-of-Tree Llama Stack Provider
 
-⚠️ Warning! This project is in early stages of development!
-
 ## About
 This repository implements [Ragas](https://github.com/explodinggradients/ragas) as an out-of-tree [Llama Stack](https://github.com/meta-llama/llama-stack) evaluation provider.
 
@@ -39,19 +37,19 @@ There are two versions of the provider:
     dotenv run uv run llama stack run distribution/run.yaml
     ```
 
-### Inline provider
-
-### Remote provider
+### Inline provider (within the Llama Stack process)
 - Create a `.env` file with the following:
+    - `EMBEDDING_MODEL`
+        - This is the embedding model that Ragas will use to embed the questions and contexts. This depends on the metrics you are using.
+
+### Remote provider (on Kubernetes via Kubeflow Pipelines)
+- In addition to the env variables above, your `.env` file should also contain the following Kubeflow Pipelines related variables:
     - `KUBEFLOW_LLAMA_STACK_URL`
-        - This is the url of the llama stack server that the remote provider will use to run the evaluation (LLM generations and embeddings, etc.). If you are running Llama Stack locally, you can use [ngrok](https://ngrok.com/) to expose it to the remote provider.
+        - This is the url of the llama stack server that the Kubeflow Pipeline will use to run the evaluation (LLM generations and embeddings, etc.). If you are running Llama Stack locally, you can use [ngrok](https://ngrok.com/) to expose it.
     - `KUBEFLOW_PIPELINES_ENDPOINT`
         - You can get this via `kubectl get routes -A | grep -i pipeline` on your Kubernetes cluster.
     - `KUBEFLOW_NAMESPACE`
         - This is the name of the data science project where the Kubeflow Pipelines server is running.
-    - `KUBEFLOW_BASE_IMAGE`
-        - This is the image used to run the Ragas evaluation in the remote provider. See `Containerfile` for details. There is a public version of this image at `quay.io/diegosquayorg/my-ragas-provider-image:latest`.
-
 
 ## Usage
 See the demos in the `demos` directory.

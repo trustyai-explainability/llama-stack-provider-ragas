@@ -1,4 +1,3 @@
-import os
 from typing import List  # noqa
 
 from dotenv import load_dotenv
@@ -7,7 +6,7 @@ from kfp import dsl
 load_dotenv()
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(packages_to_install=["llama-stack-provider-ragas[remote]"])
 def retrieve_data_from_llama_stack(
     dataset_id: str,
     llama_stack_base_url: str,
@@ -23,7 +22,7 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(packages_to_install=["llama-stack-provider-ragas[remote]"])
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,

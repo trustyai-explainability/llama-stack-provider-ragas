@@ -21,7 +21,6 @@ providers:
           pipelines_endpoint: ${env.KUBEFLOW_PIPELINES_ENDPOINT}
           namespace: ${env.KUBEFLOW_NAMESPACE}
           llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
-          base_image: ${env.KUBEFLOW_BASE_IMAGE}
   datasetio:
     # TODO: add this
     # - provider_id: huggingface
