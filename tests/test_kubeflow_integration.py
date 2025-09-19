@@ -23,7 +23,7 @@ def kf_client():
     )
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(packages_to_install=["llama-stack-provider-ragas[remote]"])
 def retrieve_data_for_testing(output_dataset: dsl.Output[dsl.Dataset]):
     import pandas as pd
 
@@ -50,7 +50,7 @@ def retrieve_data_for_testing(output_dataset: dsl.Output[dsl.Dataset]):
     dataset.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(packages_to_install=["llama-stack-provider-ragas[remote]"])
 def run_fake_ragas_evaluation(
     model: str,
     sampling_params: dict,

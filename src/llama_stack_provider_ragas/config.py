@@ -102,7 +102,3 @@ class KubeflowConfig(BaseModel):
     llama_stack_url: str = Field(
         description="Base URL for Llama Stack API (accessible from Kubeflow pods).",
     )
-
-    base_image: str = Field(
-        description="Base image for Kubeflow pipeline components.",
-    )

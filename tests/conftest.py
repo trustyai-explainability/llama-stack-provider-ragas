@@ -47,7 +47,6 @@ def kubeflow_config():
         pipelines_endpoint=os.environ["KUBEFLOW_PIPELINES_ENDPOINT"],
         namespace=os.environ["KUBEFLOW_NAMESPACE"],
         llama_stack_url=os.environ["KUBEFLOW_LLAMA_STACK_URL"],
-        base_image=os.environ["KUBEFLOW_BASE_IMAGE"],
         results_s3_prefix=os.environ["KUBEFLOW_RESULTS_S3_PREFIX"],
         s3_credentials_secret_name=os.environ["KUBEFLOW_S3_CREDENTIALS_SECRET_NAME"],
     )
