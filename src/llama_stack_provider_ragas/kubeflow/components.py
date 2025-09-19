@@ -8,7 +8,7 @@ load_dotenv()
 
 @dsl.component(
     base_image="registry.access.redhat.com/ubi9/python-312:latest",
-    packages_to_install=["llama-stack-provider-ragas[remote]"]
+    packages_to_install=["llama-stack-provider-ragas[remote]"],
 )
 def retrieve_data_from_llama_stack(
     dataset_id: str,
@@ -27,7 +27,7 @@ def retrieve_data_from_llama_stack(
 
 @dsl.component(
     base_image="registry.access.redhat.com/ubi9/python-312:latest",
-    packages_to_install=["llama-stack-provider-ragas[remote]"]
+    packages_to_install=["llama-stack-provider-ragas[remote]"],
 )
 def run_ragas_evaluation(
     model: str,
