@@ -1,0 +1,6 @@
+= Inline Provider
+:navtitle: Inline Provider
+
+== Overview
+
+The inline provider runs Ragas evaluation directly within the Llama Stack server process. This is the simplest deployment option and is ideal for development, testing, and lightweight production scenarios.

@@ -1,0 +1,6 @@
+= Remote Provider
+:navtitle: Remote Provider
+
+== Overview
+
+The remote provider runs Ragas evaluation in a separate Kubeflow Pipelines environment. This provides better isolation, scalability, and is ideal for production deployments.

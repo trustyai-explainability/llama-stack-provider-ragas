@@ -1,5 +1,5 @@
 version: "2"
-image_name: trustyai_ragas_distro
+image_name: trustyai_ragas_distro_remote
 apis:
   - eval
   - inference
@@ -7,10 +7,6 @@ apis:
   - datasetio
 providers:
   eval:
-    - provider_id: trustyai_ragas_inline
-      provider_type: inline::trustyai_ragas
-      config:
-        embedding_model: ${env.EMBEDDING_MODEL}
     - provider_id: trustyai_ragas_remote
       provider_type: remote::trustyai_ragas
       config:
@@ -23,14 +19,6 @@ providers:
           llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
           base_image: ${env.KUBEFLOW_BASE_IMAGE}
   datasetio:
-    # TODO: add this
-    # - provider_id: huggingface
-    #   provider_type: remote::huggingface
-    #   config:
-    #     kvstore:
-    #       type: sqlite
-    #       namespace: null
-    #       db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/together}/huggingface_datasetio.db
     - provider_id: localfs
       provider_type: inline::localfs
       config:

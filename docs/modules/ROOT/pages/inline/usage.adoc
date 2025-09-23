@@ -1,0 +1,15 @@
+= Inline Provider Usage
+:navtitle: Usage
+
+== Starting the Server
+
+Start the Llama Stack server with the included distribution configuration:
+
+[,bash]
+----
+dotenv run uv run llama stack run distribution/run-inline.yaml
+----
+
+== Example Usage
+
+The repository includes demonstration examples in the `demos/` directory showing how to use the provider.
