@@ -1,7 +1,7 @@
 = Ragas provider for Llama Stack
 :navtitle: Overview
 
-https://github.com/dmaniloff/llama-stack-provider-ragas[View on GitHub]
+https://github.com/trustyai-explainability/llama-stack-provider-ragas[View on GitHub]
 
 == About
 

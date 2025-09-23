@@ -48,7 +48,7 @@ If you're planning to contribute and make modifications to the code, ensure that
 
 [,bash]
 ----
-git clone https://github.com/dmaniloff/llama-stack-provider-ragas
+git clone https://github.com/trustyai-explainability/llama-stack-provider-ragas
 cd llama-stack-provider-ragas
 uv pip install -e .
 ----
