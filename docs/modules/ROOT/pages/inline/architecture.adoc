@@ -9,7 +9,7 @@ The inline provider architecture is straightforward, running everything within t
 ----
 graph TB
     A[Client Request] --> B[Llama Stack Server]
-    
+
     subgraph LSS ["🟦 Llama Stack Server"]
         style LSS stroke-dasharray: 5 5
         B --> C[Inline Ragas Provider]
@@ -18,7 +18,7 @@ graph TB
         E --> F[Results]
         F --> B
     end
-    
+
     B --> A
 ----
 
@@ -42,4 +42,3 @@ All data processing happens in memory within the same process, providing fast ac
 2. **Provider Selection**: Server routes evaluation requests to the inline RAGAS provider
 3. **Direct Processing**: Provider loads data and runs evaluation in the same process
 4. **Result Return**: Results are immediately available and returned to the client
-

@@ -22,8 +22,8 @@ print("Connection successful")
 
 == One-liner setup for the impatient
 
-- Running this command will start a Llama Stack server with the Ragas provider installed, and use the minimal distribution that is the `distribution` directory. 
-- Note that we are asking for the `[remote,distro]` dependency groups (more info below). 
+- Running this command will start a Llama Stack server with the Ragas provider installed, and use the minimal distribution that is the `distribution` directory.
+- Note that we are asking for the `[remote,distro]` dependency groups (more info below).
 - Also note that, for this one-liner to work, you will need to have your environment variables set up (see xref:remote/configuration.adoc#_environment_variables[Environment Variables]).
 
 [,bash]
@@ -84,4 +84,3 @@ uv pip install -e ".[remote]"
 # For using the sample distribution
 uv pip install -e ".[distro]"
 ----
-

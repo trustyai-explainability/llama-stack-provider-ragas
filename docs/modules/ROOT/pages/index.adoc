@@ -22,4 +22,3 @@ Choose your deployment mode:
 
 * xref:inline-provider.adoc[Inline Provider] - Simple setup for development and lightweight deployments
 * xref:remote-provider.adoc[Remote Provider] - Scalable production deployments with Kubeflow Pipelines
-
