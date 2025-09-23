@@ -1,6 +1,6 @@
 site:
   title: Ragas provider for Llama Stack
-  url: https://dmaniloff.github.io/llama-stack-provider-ragas
+  url: ${SITE_URL:-https://dmaniloff.github.io/llama-stack-provider-ragas}
   start_page: llama-stack-provider-ragas::index.adoc
 
 content:

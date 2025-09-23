@@ -43,6 +43,21 @@ jobs:
           npm install -g @antora/cli@3.1 @antora/site-generator@3.1
           npm install @asciidoctor/tabs
 
+      - name: Set site URL
+        run: |
+          # Check if a custom domain is set in repository variables/secrets
+          if [ -n "${{ vars.DOCS_CUSTOM_DOMAIN }}" ]; then
+            echo "SITE_URL=https://${{ vars.DOCS_CUSTOM_DOMAIN }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.DOCS_CUSTOM_DOMAIN }}" ]; then
+            echo "SITE_URL=https://${{ secrets.DOCS_CUSTOM_DOMAIN }}" >> $GITHUB_ENV
+          else
+            # Dynamically set the site URL based on the repository
+            REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+            REPO_OWNER=$(echo $GITHUB_REPOSITORY | cut -d'/' -f1)
+            echo "SITE_URL=https://${REPO_OWNER}.github.io/${REPO_NAME}" >> $GITHUB_ENV
+          fi
+          echo "Using site URL: $SITE_URL"
+
       - name: Build documentation
         run: antora antora-playbook.yml
 
