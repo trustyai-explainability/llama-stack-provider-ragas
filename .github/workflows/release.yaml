@@ -27,4 +27,5 @@ jobs:
       - name: Publish
         run: uv publish
       - name: Test install from pypi
-        run: uv run --isolated --no-project --with llama-stack-provider-ragas -- python -c "import llama_stack_provider_ragas; import importlib.metadata; print(f'LLS Ragas Provider Version:  {importlib.metadata.version(\"llama-stack-provider-ragas\")}')"
+        run: |
+          uv run --isolated --no-project --with llama-stack-provider-ragas -- python -c "import llama_stack_provider_ragas; import importlib.metadata; print(f'LLS Ragas Provider Version: {importlib.metadata.version(\"llama-stack-provider-ragas\")}')"
