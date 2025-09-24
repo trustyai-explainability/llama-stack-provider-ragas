@@ -1,0 +1,86 @@
+= Remote Provider Installation
+:navtitle: Installation
+
+== Prerequisites
+
+* Python 3.12 or later
+* https://docs.astral.sh/uv/[uv] package manager
+* Kubernetes cluster with Kubeflow Pipelines installed
+* Access to the Kubeflow Pipelines API
+* Container registry access for custom images
+
+=== Kubeflow Pipelines Server
+
+Ensure you have a running Kubeflow Pipelines installation. You can verify access with:
+
+[,python]
+----
+import kfp
+client = kfp.Client(host='<your-kfp-endpoint>')
+print("Connection successful")
+----
+
+== One-liner setup for the impatient
+
+- Running this command will start a Llama Stack server with the Ragas provider installed, and use the minimal distribution that is the `distribution` directory.
+- Note that we are asking for the `[remote,distro]` dependency groups (more info below).
+- Also note that, for this one-liner to work, you will need to have your environment variables set up (see xref:remote/configuration.adoc#_environment_variables[Environment Variables]).
+
+[,bash]
+----
+uv run --with llama-stack-provider-ragas[remote,distro] llama stack run distribution/run-remote.yaml
+----
+
+== Installing with uv
+
+To get started with uv, create a virtual environment and install from PyPI:
+
+[,bash]
+----
+uv venv --python=3.12
+source .venv/bin/activate
+uv pip install llama-stack-provider-ragas
+----
+
+== Development setup
+
+If you're planning to contribute and make modifications to the code, ensure that you clone the repository and set it up as an editable install:
+
+[,bash]
+----
+git clone https://github.com/trustyai-explainability/llama-stack-provider-ragas
+cd llama-stack-provider-ragas
+uv pip install -e .
+----
+
+== Optional dependencies for remote provider
+
+The package includes several optional dependency groups:
+
+[cols="1,3"]
+|===
+|Group |Description
+
+|`dev`
+|Development dependencies including testing tools, linting, and type checking
+
+|`remote`
+|Dependencies for the Kubeflow Pipelines-enabled remote provider
+
+|`distro`
+|Dependencies to use the provided minimal Llama Stack distribution under `distribution/`
+|===
+
+=== Installing with optional dependencies
+
+[,bash]
+----
+# For development (includes all dependencies)
+uv pip install -e ".[dev]"
+
+# For remote provider (includes the KFP dependencies)
+uv pip install -e ".[remote]"
+
+# For using the sample distribution
+uv pip install -e ".[distro]"
+----

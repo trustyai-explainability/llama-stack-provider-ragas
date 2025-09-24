@@ -1,0 +1,56 @@
+version: "2"
+image_name: trustyai_ragas_distro_remote
+apis:
+  - eval
+  - inference
+  - telemetry
+  - datasetio
+providers:
+  eval:
+    - provider_id: trustyai_ragas_remote
+      provider_type: remote::trustyai_ragas
+      config:
+        embedding_model: ${env.EMBEDDING_MODEL}
+        kubeflow_config:
+          results_s3_prefix: ${env.KUBEFLOW_RESULTS_S3_PREFIX}
+          s3_credentials_secret_name: ${env.KUBEFLOW_S3_CREDENTIALS_SECRET_NAME}
+          pipelines_endpoint: ${env.KUBEFLOW_PIPELINES_ENDPOINT}
+          namespace: ${env.KUBEFLOW_NAMESPACE}
+          llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
+          base_image: ${env.KUBEFLOW_BASE_IMAGE}
+  datasetio:
+    - provider_id: localfs
+      provider_type: inline::localfs
+      config:
+        kvstore:
+          type: sqlite
+          namespace: null
+          db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/trustyai_ragas_distro}/localfs_datasetio.db
+  inference:
+    - provider_id: ollama
+      provider_type: remote::ollama
+      config:
+        url: ${env.OLLAMA_URL:http://localhost:11434}
+  telemetry:
+    - provider_id: meta-reference
+      provider_type: inline::meta-reference
+      config:
+        service_name: ${env.OTEL_SERVICE_NAME:}
+      sinks: ${env.TELEMETRY_SINKS:console,sqlite}
+      sqlite_db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/trustyai_ragas_distro}/trace_store.db
+models:
+  - metadata:
+      embedding_dimension: 384
+    model_id: all-MiniLM-L6-v2
+    provider_id: ollama
+    provider_model_id: all-minilm:latest
+    model_type: embedding
+  - metadata: {}
+    model_id: granite3.3:2b
+    provider_id: ollama
+    provider_model_id: granite3.3:2b
+    model_type: llm
+server:
+  host: localhost
+  port: 8321
+external_providers_dir: ./providers.d

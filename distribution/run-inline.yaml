@@ -1,5 +1,5 @@
 version: "2"
-image_name: trustyai_ragas_distro
+image_name: trustyai_ragas_distro_inline
 apis:
   - eval
   - inference
@@ -11,26 +11,7 @@ providers:
       provider_type: inline::trustyai_ragas
       config:
         embedding_model: ${env.EMBEDDING_MODEL}
-    - provider_id: trustyai_ragas_remote
-      provider_type: remote::trustyai_ragas
-      config:
-        embedding_model: ${env.EMBEDDING_MODEL}
-        kubeflow_config:
-          results_s3_prefix: ${env.KUBEFLOW_RESULTS_S3_PREFIX}
-          s3_credentials_secret_name: ${env.KUBEFLOW_S3_CREDENTIALS_SECRET_NAME}
-          pipelines_endpoint: ${env.KUBEFLOW_PIPELINES_ENDPOINT}
-          namespace: ${env.KUBEFLOW_NAMESPACE}
-          llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
-          base_image: ${env.KUBEFLOW_BASE_IMAGE}
   datasetio:
-    # TODO: add this
-    # - provider_id: huggingface
-    #   provider_type: remote::huggingface
-    #   config:
-    #     kvstore:
-    #       type: sqlite
-    #       namespace: null
-    #       db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/together}/huggingface_datasetio.db
     - provider_id: localfs
       provider_type: inline::localfs
       config:

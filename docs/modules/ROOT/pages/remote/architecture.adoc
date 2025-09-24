@@ -1,0 +1,43 @@
+= Remote Provider Architecture
+:navtitle: Architecture
+
+== Overview
+
+The remote provider architecture includes:
+
+[mermaid]
+----
+graph TB
+    subgraph LSS ["🟦 Llama Stack Server"]
+        style LSS stroke-dasharray: 5 5
+        A[Llama Stack Server] --> B[Remote Provider]
+    end
+
+    subgraph KFP ["☁️ Cloud"]
+        style KFP fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+        B --> C[Kubeflow Pipelines API]
+        C --> D[Kubernetes Pod]
+        D --> E[Ragas Evaluation]
+        E --> F[S3 Results Storage]
+        style F fill:#ff9800,stroke:#e65100,color:#fff
+    end
+
+    F -.->|"Fetch Results"| A
+----
+
+== Components
+
+=== Llama Stack Server
+The main server that receives requests and coordinates with the remote provider.
+
+=== Remote Provider
+The provider implementation that creates and manages Kubeflow Pipelines for evaluation.
+
+=== Kubeflow Pipelines API
+The interface for creating, submitting, and monitoring evaluation pipelines.
+
+=== Kubernetes Pod
+Isolated containers where the actual RAGAS evaluation runs.
+
+=== S3 Results Storage
+S3-compatible storage system for evaluation results and artifacts. The Llama Stack server fetches results from S3 after pipeline completion.

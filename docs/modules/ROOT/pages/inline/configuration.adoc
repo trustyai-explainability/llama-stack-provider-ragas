@@ -1,0 +1,30 @@
+= Inline Provider Configuration
+:navtitle: Configuration
+
+== Overview
+
+The inline provider requires minimal configuration beyond the standard Llama Stack setup.
+
+== Environment Variables
+
+Create a `.env` file in the project root with:
+
+[,properties]
+----
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+----
+
+== Distribution Configuration
+
+The repository includes a sample Llama Stack distribution configuration that uses Ollama as a provider for inference and embeddings.
+
+The inline provider is setup in the following lines of the `run-inline.yaml`:
+
+[,yaml]
+----
+eval:
+  - provider_id: trustyai_ragas_inline
+    provider_type: inline::trustyai_ragas
+    config:
+      embedding_model: ${env.EMBEDDING_MODEL}
+----

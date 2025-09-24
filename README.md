@@ -34,23 +34,44 @@ There are two versions of the provider:
     ```bash
     uv pip install -e ".[dev]"
     ```
-- Run the Llama Stack server with the distribution configs. The distribution is a simple LS distribution that uses Ollama for inference and embeddings, and includes both the inline and remote Ragas providers. Counting the number of `run`s in this command is left as an exercise for the reader:
-    ```bash
-    dotenv run uv run llama stack run distribution/run.yaml
-    ```
+- The sample LS distributions (one for inline and one for remote provider) is a simple LS distribution that uses Ollama for inference and embeddings. See the provider-specific sections below for setup and run commands.
 
 ### Inline provider
 
+Create a `.env` file with the required environment variable:
+```bash
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+```
+
+Run the server:
+```bash
+dotenv run uv run llama stack run distribution/run-inline.yaml
+```
+
 ### Remote provider
-- Create a `.env` file with the following:
-    - `KUBEFLOW_LLAMA_STACK_URL`
-        - This is the url of the llama stack server that the remote provider will use to run the evaluation (LLM generations and embeddings, etc.). If you are running Llama Stack locally, you can use [ngrok](https://ngrok.com/) to expose it to the remote provider.
-    - `KUBEFLOW_PIPELINES_ENDPOINT`
-        - You can get this via `kubectl get routes -A | grep -i pipeline` on your Kubernetes cluster.
-    - `KUBEFLOW_NAMESPACE`
-        - This is the name of the data science project where the Kubeflow Pipelines server is running.
-    - `KUBEFLOW_BASE_IMAGE`
-        - This is the image used to run the Ragas evaluation in the remote provider. See `Containerfile` for details. There is a public version of this image at `quay.io/diegosquayorg/my-ragas-provider-image:latest`.
+
+Create a `.env` file with the following:
+```bash
+# Required for both inline and remote
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+
+# Required for remote provider
+KUBEFLOW_LLAMA_STACK_URL=<your-llama-stack-url>
+KUBEFLOW_PIPELINES_ENDPOINT=<your-kfp-endpoint>
+KUBEFLOW_NAMESPACE=<your-namespace>
+KUBEFLOW_BASE_IMAGE=quay.io/diegosquayorg/my-ragas-provider-image:latest
+```
+
+Where:
+- `KUBEFLOW_LLAMA_STACK_URL`: The URL of the llama stack server that the remote provider will use to run the evaluation (LLM generations and embeddings, etc.). If you are running Llama Stack locally, you can use [ngrok](https://ngrok.com/) to expose it to the remote provider.
+- `KUBEFLOW_PIPELINES_ENDPOINT`: You can get this via `kubectl get routes -A | grep -i pipeline` on your Kubernetes cluster.
+- `KUBEFLOW_NAMESPACE`: The name of the data science project where the Kubeflow Pipelines server is running.
+- `KUBEFLOW_BASE_IMAGE`: The image used to run the Ragas evaluation in the remote provider. See `Containerfile` for details. There is a public version of this image at `quay.io/diegosquayorg/my-ragas-provider-image:latest`.
+
+Run the server:
+```bash
+dotenv run uv run llama stack run distribution/run-remote.yaml
+```
 
 
 ## Usage

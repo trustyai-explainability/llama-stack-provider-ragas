@@ -1,0 +1,25 @@
+= Remote Provider Usage
+:navtitle: Usage
+
+== Starting the Server
+
+Start the Llama Stack server with the included distribution configuration:
+
+[,bash]
+----
+dotenv run uv run llama stack run distribution/run-remote.yaml
+----
+
+This will start a server with the remote Ragas evaluation provider available.
+
+== Basic Evaluation Workflow
+
+1. **Prepare Your Data**: Ensure your evaluation data is in the format expected by Ragas and Llama Stack
+2. **Submit Evaluation**: Use the Llama Stack eval API to submit your evaluation request
+3. **Pipeline Execution**: Remote provider creates and executes Kubeflow Pipeline
+4. **Monitor Progress**: Track evaluation progress through Kubeflow APIs
+5. **Collect Results**: Results are automatically collected and returned
+
+== Example Workflow
+
+The repository includes demonstration examples in the `demos/` directory showing how to use the remote provider.

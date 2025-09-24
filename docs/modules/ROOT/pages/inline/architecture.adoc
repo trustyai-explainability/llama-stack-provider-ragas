@@ -1,0 +1,44 @@
+= Inline Provider Architecture
+:navtitle: Architecture
+
+== Overview
+
+The inline provider architecture is straightforward, running everything within the Llama Stack server process:
+
+[mermaid]
+----
+graph TB
+    A[Client Request] --> B[Llama Stack Server]
+
+    subgraph LSS ["🟦 Llama Stack Server"]
+        style LSS stroke-dasharray: 5 5
+        B --> C[Inline Ragas Provider]
+        C --> D[RAGAS Engine]
+        D --> E[Direct Memory Processing]
+        E --> F[Results]
+        F --> B
+    end
+
+    B --> A
+----
+
+== Components
+
+=== Llama Stack Server
+The main server process that handles all requests and coordinates between different providers.
+
+=== Inline Ragas Provider
+The provider implementation that handles RAGAS evaluation requests directly within the server process.
+
+=== RAGAS Engine
+The core RAGAS evaluation engine that runs the actual metrics calculations.
+
+=== Direct Memory Processing
+All data processing happens in memory within the same process, providing fast access but sharing resources.
+
+== Process Flow
+
+1. **Request Reception**: Client requests are received by the Llama Stack server
+2. **Provider Selection**: Server routes evaluation requests to the inline RAGAS provider
+3. **Direct Processing**: Provider loads data and runs evaluation in the same process
+4. **Result Return**: Results are immediately available and returned to the client
