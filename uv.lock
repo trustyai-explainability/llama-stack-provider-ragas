@@ -1353,8 +1353,8 @@ wheels = [
 
 [[package]]
 name = "llama-stack-provider-ragas"
-version = "0.1.0"
-source = { virtual = "." }
+version = "0.1.1"
+source = { editable = "." }
 dependencies = [
     { name = "llama-stack" },
     { name = "pandas" },
