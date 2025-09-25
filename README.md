@@ -1,5 +1,7 @@
 # `trustyai-ragas` <br> Ragas as an Out-of-Tree Llama Stack Provider
 
+[![PyPI version](https://img.shields.io/pypi/v/llama_stack_provider_ragas.svg)](https://pypi.org/project/llama-stack-provider-ragas/)
+
 ⚠️ Warning! This project is in early stages of development!
 
 ## About
