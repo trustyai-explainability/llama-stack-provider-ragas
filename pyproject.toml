@@ -25,7 +25,8 @@ authors = [
 keywords = ["llama-stack", "ragas", "evaluation"]
 dependencies = [
     "setuptools-scm",
-    "llama-stack==0.2.11",
+    "llama-stack==0.2.22",
+    "greenlet==3.2.4", # inline/files/localfs errors saying greenlet not found
     "ragas==0.3.0",
     "pandas==2.3.0",
     "pyarrow==20.0.0",
