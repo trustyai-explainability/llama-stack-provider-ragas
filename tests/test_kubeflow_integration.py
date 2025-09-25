@@ -9,7 +9,9 @@ import pytest
 from kfp import dsl
 from ragas.metrics import answer_relevancy
 
-from llama_stack_provider_ragas.kubeflow.pipeline import ragas_evaluation_pipeline
+from llama_stack_provider_ragas.remote.kubeflow.pipeline import (
+    ragas_evaluation_pipeline,
+)
 
 # Mark all tests as integration tests
 pytestmark = pytest.mark.integration_test
@@ -70,7 +72,7 @@ def run_fake_ragas_evaluation(
 
     from llama_stack_provider_ragas.constants import METRIC_MAPPING
     from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
-    from llama_stack_provider_ragas.wrappers_remote import (
+    from llama_stack_provider_ragas.remote.wrappers_remote import (
         LlamaStackRemoteEmbeddings,
         LlamaStackRemoteLLM,
     )
