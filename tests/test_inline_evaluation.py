@@ -41,7 +41,7 @@ def test_single_metric_evaluation(
         benchmark_id=benchmark_id,
         dataset_id=dataset_id,
         scoring_functions=[metric_to_test.name],
-        provider_id="trustyai_ragas_inline",
+        provider_id="trustyai_ragas",
     )
 
     job = lls_client.eval.run_eval(

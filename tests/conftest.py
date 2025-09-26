@@ -17,13 +17,13 @@ load_dotenv()
 @pytest.fixture
 def lls_client():
     return LlamaStackClient(
-        base_url=os.environ.get("LLAMA_STACK_URL", "http://localhost:8321")
+        base_url=os.environ.get("KUBEFLOW_LLAMA_STACK_URL", "http://localhost:8321")
     )
 
 
 @pytest.fixture
 def model():
-    return "granite3.3:2b"  # TODO : read from env
+    return "ollama/granite3.3:2b"  # TODO : read from env
 
 
 @pytest.fixture

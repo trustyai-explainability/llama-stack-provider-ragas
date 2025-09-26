@@ -12,14 +12,14 @@ from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
 from llama_stack.schema_utils import json_schema_type
 from pydantic import BaseModel
 
-from llama_stack_provider_ragas.config import (
+from ..config import (
     KubeflowConfig,
     RagasConfig,
     RagasProviderRemoteConfig,
 )
-from llama_stack_provider_ragas.constants import AVAILABLE_METRICS
-from llama_stack_provider_ragas.errors import RagasEvaluationError
-from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
+from ..constants import AVAILABLE_METRICS
+from ..errors import RagasEvaluationError
+from ..logging_utils import render_dataframe_as_table
 
 logger = logging.getLogger(__name__)
 

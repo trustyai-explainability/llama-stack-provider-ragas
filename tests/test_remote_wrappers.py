@@ -1,7 +1,7 @@
 import pytest
 from langchain_core.prompt_values import StringPromptValue
 
-from llama_stack_provider_ragas.wrappers_remote import (
+from llama_stack_provider_ragas.remote.wrappers_remote import (
     LlamaStackRemoteEmbeddings,
     LlamaStackRemoteLLM,
 )

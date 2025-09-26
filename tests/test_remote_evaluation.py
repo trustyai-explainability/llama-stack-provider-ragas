@@ -9,7 +9,7 @@ from ragas.metrics import answer_relevancy
 from ragas.run_config import RunConfig
 
 from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
-from llama_stack_provider_ragas.wrappers_remote import (
+from llama_stack_provider_ragas.remote.wrappers_remote import (
     LlamaStackRemoteEmbeddings,
     LlamaStackRemoteLLM,
 )
