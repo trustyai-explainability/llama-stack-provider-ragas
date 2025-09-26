@@ -5,46 +5,34 @@
 
 The remote provider runs Ragas evaluation in a separate Kubeflow Pipelines environment. This provides better isolation, scalability, and is ideal for production deployments.
 
-== Architecture
-
-The remote provider architecture includes:
+== Sequence Diagram
 
 [mermaid]
 ----
-graph TB
-    subgraph LSS ["🟦 Llama Stack Server"]
-        style LSS stroke-dasharray: 5 5
-        A[Llama Stack Server] --> B[Remote Provider]
-    end
+sequenceDiagram
+  autonumber
+  participant U as User
+  
+  box Llama Stack
+    participant E as Router
+    participant C as Config (run.yaml)
+    participant P_remote as remote::trustyai_ragas
+  end
+  
+  box Cloud
+    participant KF as Kubeflow Pipelines
+    participant S3 as S3 Storage
+  end
 
-    subgraph KFP ["☁️ Cloud"]
-        style KFP fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-        B --> C[Kubeflow Pipelines API]
-        C --> D[Kubernetes Pod]
-        D --> E[Ragas Evaluation]
-        E --> F[S3 Results Storage]
-        style F fill:#ff9800,stroke:#e65100,color:#fff
-    end
-
-    F -.->|"Fetch Results"| A
+  U->>E: Request evaluation
+  E->>C: Resolve provider selection
+  E->>P_remote: Submit job
+  P_remote->>KF: Launch pipeline
+  KF->>S3: Store artifacts (results_s3_prefix)
+  KF-->>P_remote: Job status + artifact refs
+  P_remote-->>E: Return results reference
+  E-->>U: Return evaluation outcome
 ----
-
-=== Components
-
-==== Llama Stack Server
-The main server that receives requests and coordinates with the remote provider.
-
-==== Remote Provider
-The provider implementation that creates and manages Kubeflow Pipelines for evaluation.
-
-==== Kubeflow Pipelines API
-The interface for creating, submitting, and monitoring evaluation pipelines.
-
-==== Kubernetes Pod
-Isolated containers where the actual RAGAS evaluation runs.
-
-==== S3 Results Storage
-S3-compatible storage system for evaluation results and artifacts. The Llama Stack server fetches results from S3 after pipeline completion.
 
 == Installation
 
