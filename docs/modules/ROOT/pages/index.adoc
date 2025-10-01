@@ -1,6 +1,8 @@
 = Ragas provider for Llama Stack
 :navtitle: Overview
 
+image::https://raw.githubusercontent.com/trustyai-explainability/llama-stack-provider-ragas/main/docs/_static/provider-logo.png[Llama Stack Provider,align=center,width=300]
+
 https://github.com/trustyai-explainability/llama-stack-provider-ragas[View on GitHub]
 
 == About
