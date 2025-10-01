@@ -11,7 +11,7 @@ providers:
   eval:
     - provider_id: trustyai_ragas
       provider_type: remote::trustyai_ragas
-      module: llama_stack_provider_ragas.remote
+      module: llama_stack_provider_ragas
       config:
         embedding_model: ${env.EMBEDDING_MODEL}
         kubeflow_config:

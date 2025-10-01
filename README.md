@@ -38,19 +38,7 @@ There are two versions of the provider:
     ```
 - The sample LS distributions (one for inline and one for remote provider) is a simple LS distribution that uses Ollama for inference and embeddings. See the provider-specific sections below for setup and run commands.
 
-### Inline provider
-
-Create a `.env` file with the required environment variable:
-```bash
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-```
-
-Run the server:
-```bash
-dotenv run uv run llama stack run distribution/run-inline.yaml
-```
-
-### Remote provider
+### Remote provider (default)
 
 Create a `.env` file with the following:
 ```bash
@@ -75,6 +63,19 @@ Run the server:
 dotenv run uv run llama stack run distribution/run-remote.yaml
 ```
 
+### Inline provider (need to specify `.inline` in the module name)
+
+Create a `.env` file with the required environment variable:
+```bash
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+```
+
+Run the server:
+```bash
+dotenv run uv run llama stack run distribution/run-inline.yaml
+```
+
+You will notice that `run-inline.yaml` file has the module name as `llama_stack_provider_ragas.inline`, in order to specify the inline provider.
 
 ## Usage
 See the demos in the `demos` directory.
