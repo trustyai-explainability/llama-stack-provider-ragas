@@ -12,13 +12,13 @@ The remote provider runs Ragas evaluation in a separate Kubeflow Pipelines envir
 sequenceDiagram
   autonumber
   participant U as User
-  
+
   box Llama Stack
     participant E as Router
     participant C as Config (run.yaml)
     participant P_remote as remote::trustyai_ragas
   end
-  
+
   box Cloud
     participant KF as Kubeflow Pipelines
     participant S3 as S3 Storage
