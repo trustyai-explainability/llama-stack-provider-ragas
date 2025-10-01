@@ -177,7 +177,7 @@ The remote provider is setup in the following lines of the `run-remote.yaml`:
 eval:
   - provider_id: trustyai_ragas
     provider_type: remote::trustyai_ragas
-    module: llama_stack_provider_ragas.remote
+    module: llama_stack_provider_ragas.remote # can also just be llama_stack_provider_ragas and it will default to remote
     config:
       embedding_model: ${env.EMBEDDING_MODEL}
       kubeflow_config:
