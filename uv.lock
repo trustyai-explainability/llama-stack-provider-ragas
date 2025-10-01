@@ -1462,7 +1462,7 @@ wheels = [
 
 [[package]]
 name = "llama-stack-provider-ragas"
-version = "0.2.3"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "greenlet" },
