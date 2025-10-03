@@ -7,7 +7,51 @@ from kfp import dsl
 load_dotenv()
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+def get_base_image() -> str:
+    """Get base image from env, fallback to k8s ConfigMap, fallback to default image."""
+
+    base_image = os.environ.get("KUBEFLOW_BASE_IMAGE")
+    if base_image:
+        return base_image
+
+    try:
+        import logging
+
+        from kubernetes import client, config
+
+        from llama_stack_provider_ragas.constants import (
+            DEFAULT_RAGAS_PROVIDER_IMAGE,
+            RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
+            RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+        )
+
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+
+        try:
+            config.load_incluster_config()
+        except config.ConfigException:
+            config.load_kube_config()
+
+        api = client.CoreV1Api()
+
+        # For now, use hardcoded namespace for redhat-ods-applications
+        namespace = "redhat-ods-applications"
+        configmap = api.read_namespaced_config_map(
+            name=RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME, namespace=namespace
+        )
+
+        data: dict[str, str] | None = configmap.data
+        if data and RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY in data:
+            return data[RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY]
+
+    except Exception as e:
+        logger.warning(f"Warning: Could not read from ConfigMap: {e}")
+
+    return DEFAULT_RAGAS_PROVIDER_IMAGE
+
+
+@dsl.component(base_image=get_base_image())
 def retrieve_data_from_llama_stack(
     dataset_id: str,
     llama_stack_base_url: str,
@@ -23,7 +67,7 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(base_image=get_base_image())
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,

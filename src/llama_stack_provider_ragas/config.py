@@ -103,6 +103,10 @@ class KubeflowConfig(BaseModel):
         description="Base URL for Llama Stack API (accessible from Kubeflow pods).",
     )
 
-    base_image: str = Field(
-        description="Base image for Kubeflow pipeline components.",
+    base_image: str | None = Field(
+        description=(
+            "Base image for Kubeflow pipeline components. "
+            "If not provided via env var, the image name will be read from a ConfigMap specified in constants.py."
+        ),
+        default=None,
     )
