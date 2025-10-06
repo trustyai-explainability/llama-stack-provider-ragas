@@ -1,4 +1,3 @@
-import os
 from typing import List  # noqa
 
 from dotenv import load_dotenv
@@ -7,7 +6,63 @@ from kfp import dsl
 load_dotenv()
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+def get_base_image() -> str:
+    """Get base image from env, fallback to k8s ConfigMap, fallback to default image."""
+
+    import logging
+    import os
+
+    from kubernetes import client, config
+    from kubernetes.client.exceptions import ApiException
+
+    from llama_stack_provider_ragas.constants import (
+        DEFAULT_RAGAS_PROVIDER_IMAGE,
+        KUBEFLOW_CANDIDATE_NAMESPACES,
+        RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
+        RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+    )
+
+    if (base_image := os.environ.get("KUBEFLOW_BASE_IMAGE")) is not None:
+        return base_image
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    try:
+        config.load_incluster_config()
+    except config.ConfigException:
+        config.load_kube_config()
+
+    api = client.CoreV1Api()
+
+    for candidate_namespace in KUBEFLOW_CANDIDATE_NAMESPACES:
+        try:
+            configmap = api.read_namespaced_config_map(
+                name=RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+                namespace=candidate_namespace,
+            )
+
+            data: dict[str, str] | None = configmap.data
+            if data and RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY in data:
+                return data[RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY]
+        except ApiException as api_exc:
+            if api_exc.status == 404:
+                continue
+            else:
+                logger.warning(f"Warning: Could not read from ConfigMap: {api_exc}")
+        except Exception as e:
+            logger.warning(f"Warning: Could not read from ConfigMap: {e}")
+    else:
+        # None of the candidate namespaces had the required ConfigMap/key
+        logger.warning(
+            f"ConfigMap '{RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME}' with key "
+            f"'{RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY}' not found in any of the namespaces: "
+            f"{KUBEFLOW_CANDIDATE_NAMESPACES}. Returning default image."
+        )
+        return DEFAULT_RAGAS_PROVIDER_IMAGE
+
+
+@dsl.component(base_image=get_base_image())
 def retrieve_data_from_llama_stack(
     dataset_id: str,
     llama_stack_base_url: str,
@@ -23,7 +78,7 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=os.environ["KUBEFLOW_BASE_IMAGE"])
+@dsl.component(base_image=get_base_image())
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,
