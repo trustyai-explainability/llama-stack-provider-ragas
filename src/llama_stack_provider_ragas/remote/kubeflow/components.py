@@ -1,4 +1,3 @@
-import os
 from typing import List  # noqa
 
 from dotenv import load_dotenv
@@ -10,45 +9,57 @@ load_dotenv()
 def get_base_image() -> str:
     """Get base image from env, fallback to k8s ConfigMap, fallback to default image."""
 
-    base_image = os.environ.get("KUBEFLOW_BASE_IMAGE")
-    if base_image:
+    import logging
+    import os
+
+    from kubernetes import client, config
+    from kubernetes.client.exceptions import ApiException
+
+    from llama_stack_provider_ragas.constants import (
+        DEFAULT_RAGAS_PROVIDER_IMAGE,
+        KUBEFLOW_CANDIDATE_NAMESPACES,
+        RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
+        RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+    )
+
+    if (base_image := os.environ.get("KUBEFLOW_BASE_IMAGE")) is not None:
         return base_image
 
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
     try:
-        import logging
+        config.load_incluster_config()
+    except config.ConfigException:
+        config.load_kube_config()
 
-        from kubernetes import client, config
+    api = client.CoreV1Api()
 
-        from llama_stack_provider_ragas.constants import (
-            DEFAULT_RAGAS_PROVIDER_IMAGE,
-            RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
-            RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
-        )
-
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-
+    for candidate_namespace in KUBEFLOW_CANDIDATE_NAMESPACES:
         try:
-            config.load_incluster_config()
-        except config.ConfigException:
-            config.load_kube_config()
+            configmap = api.read_namespaced_config_map(
+                name=RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+                namespace=candidate_namespace,
+            )
 
-        api = client.CoreV1Api()
-
-        # For now, use hardcoded namespace for redhat-ods-applications
-        namespace = "redhat-ods-applications"
-        configmap = api.read_namespaced_config_map(
-            name=RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME, namespace=namespace
+            data: dict[str, str] | None = configmap.data
+            if data and RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY in data:
+                return data[RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY]
+        except ApiException as api_exc:
+            if api_exc.status == 404:
+                continue
+            else:
+                logger.warning(f"Warning: Could not read from ConfigMap: {api_exc}")
+        except Exception as e:
+            logger.warning(f"Warning: Could not read from ConfigMap: {e}")
+    else:
+        # None of the candidate namespaces had the required ConfigMap/key
+        logger.warning(
+            f"ConfigMap '{RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME}' with key "
+            f"'{RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY}' not found in any of the namespaces: "
+            f"{KUBEFLOW_CANDIDATE_NAMESPACES}. Returning default image."
         )
-
-        data: dict[str, str] | None = configmap.data
-        if data and RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY in data:
-            return data[RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY]
-
-    except Exception as e:
-        logger.warning(f"Warning: Could not read from ConfigMap: {e}")
-
-    return DEFAULT_RAGAS_PROVIDER_IMAGE
+        return DEFAULT_RAGAS_PROVIDER_IMAGE
 
 
 @dsl.component(base_image=get_base_image())

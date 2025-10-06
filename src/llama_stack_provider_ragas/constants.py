@@ -27,3 +27,4 @@ AVAILABLE_METRICS = list(METRIC_MAPPING.keys())
 RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME = "trustyai-service-operator-config"
 RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY = "ragas-provider-image"
 DEFAULT_RAGAS_PROVIDER_IMAGE = "quay.io/trustyai/llama-stack-provider-ragas:latest"
+KUBEFLOW_CANDIDATE_NAMESPACES = ["redhat-ods-applications", "opendatahub"]
