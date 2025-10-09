@@ -171,7 +171,7 @@ The name of the data science project where the Kubeflow Pipelines server is runn
 The container image used to run the Ragas evaluation in the remote provider. See the `Containerfile` in the repository root for details on building a custom image.
 
 `KUBEFLOW_RESULTS_S3_PREFIX`::
-The S3 location (bucket and prefix) where evaluation results will be stored. This should be a folder path, e.g., `s3://my-bucket/ragas-results/`. The remote provider will write evaluation outputs to this location.
+The S3 location (bucket and prefix) where evaluation results will be stored. This should be a folder path, e.g., `s3://my-bucket/ragas-results`. The remote provider will write evaluation outputs to this location.
 
 `KUBEFLOW_S3_CREDENTIALS_SECRET_NAME`::
 The name of the Kubernetes secret containing AWS credentials with write access to the S3 bucket specified in `KUBEFLOW_RESULTS_S3_PREFIX`. This secret will be mounted as environment variables in the Kubeflow pipeline components.
