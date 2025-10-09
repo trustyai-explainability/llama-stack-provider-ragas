@@ -43,7 +43,7 @@ class RagasEvaluationJob(Job):
 
     @property
     def result_s3_location(self) -> str:
-        return f"{self.runtime_config.kubeflow_config.results_s3_prefix}/{self.job_id}/results.jsonl"
+        return f"{self.runtime_config.kubeflow_config.results_s3_prefix.rstrip('/')}/{self.job_id}/results.jsonl"
 
 
 @json_schema_type
