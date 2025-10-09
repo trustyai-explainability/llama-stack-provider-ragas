@@ -53,6 +53,8 @@ KUBEFLOW_LLAMA_STACK_URL=<your-llama-stack-url>
 KUBEFLOW_PIPELINES_ENDPOINT=<your-kfp-endpoint>
 KUBEFLOW_NAMESPACE=<your-namespace>
 KUBEFLOW_BASE_IMAGE=quay.io/diegosquayorg/my-ragas-provider-image:latest
+KUBEFLOW_RESULTS_S3_PREFIX=s3://my-bucket/ragas-results
+KUBEFLOW_S3_CREDENTIALS_SECRET_NAME=<secret-name>
 ```
 
 Where:
@@ -60,6 +62,14 @@ Where:
 - `KUBEFLOW_PIPELINES_ENDPOINT`: You can get this via `kubectl get routes -A | grep -i pipeline` on your Kubernetes cluster.
 - `KUBEFLOW_NAMESPACE`: The name of the data science project where the Kubeflow Pipelines server is running.
 - `KUBEFLOW_BASE_IMAGE`: The image used to run the Ragas evaluation in the remote provider. See `Containerfile` for details. There is a public version of this image at `quay.io/diegosquayorg/my-ragas-provider-image:latest`.
+- `KUBEFLOW_RESULTS_S3_PREFIX`: S3 location (bucket and prefix folder) where evaluation results will be stored, e.g., `s3://my-bucket/ragas-results`.
+- `KUBEFLOW_S3_CREDENTIALS_SECRET_NAME`: Name of the Kubernetes secret containing AWS credentials with write access to the S3 bucket. Create with:
+  ```bash
+  oc create secret generic <secret-name> \
+    --from-literal=AWS_ACCESS_KEY_ID=your-access-key \
+    --from-literal=AWS_SECRET_ACCESS_KEY=your-secret-key \
+    --from-literal=AWS_DEFAULT_REGION=us-east-1
+  ```
 
 Run the server:
 ```bash
