@@ -142,6 +142,10 @@ KUBEFLOW_NAMESPACE=<your-namespace>
 
 # Container image for remote execution
 KUBEFLOW_BASE_IMAGE=quay.io/diegosquayorg/my-ragas-provider-image:latest
+
+# S3 configuration for storing evaluation results
+KUBEFLOW_RESULTS_S3_PREFIX=s3://my-bucket/ragas-results
+KUBEFLOW_S3_CREDENTIALS_SECRET_NAME=<secret-name>
 ----
 
 === Environment Variable Details
@@ -165,6 +169,22 @@ The name of the data science project where the Kubeflow Pipelines server is runn
 
 `KUBEFLOW_BASE_IMAGE`::
 The container image used to run the Ragas evaluation in the remote provider. See the `Containerfile` in the repository root for details on building a custom image.
+
+`KUBEFLOW_RESULTS_S3_PREFIX`::
+The S3 location (bucket and prefix) where evaluation results will be stored. This should be a folder path, e.g., `s3://my-bucket/ragas-results`. The remote provider will write evaluation outputs to this location.
+
+`KUBEFLOW_S3_CREDENTIALS_SECRET_NAME`::
+The name of the Kubernetes secret containing AWS credentials with write access to the S3 bucket specified in `KUBEFLOW_RESULTS_S3_PREFIX`. This secret will be mounted as environment variables in the Kubeflow pipeline components.
++
+To create the secret:
++
+[,bash]
+----
+oc create secret generic <secret-name> \
+  --from-literal=AWS_ACCESS_KEY_ID=your-access-key \
+  --from-literal=AWS_SECRET_ACCESS_KEY=your-secret-key \
+  --from-literal=AWS_DEFAULT_REGION=us-east-1
+----
 
 === Distribution Configuration
 
