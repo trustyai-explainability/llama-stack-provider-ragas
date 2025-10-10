@@ -44,7 +44,7 @@ def test_single_metric_evaluation(
         provider_id="trustyai_ragas",
     )
 
-    job = lls_client.eval.run_eval(
+    job = lls_client.alpha.eval.run_eval(
         benchmark_id=benchmark_id,
         benchmark_config={
             "eval_candidate": {

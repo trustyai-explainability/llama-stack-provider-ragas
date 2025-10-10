@@ -4,7 +4,7 @@ from llama_stack.providers.datatypes import Api, InlineProviderSpec, ProviderSpe
 def get_provider_spec() -> ProviderSpec:
     return InlineProviderSpec(
         api=Api.eval,
-        provider_type="inline::trustyai_ragas",
+        provider_type="inline::trustyai_ragas_inline",
         pip_packages=["ragas==0.3.0"],
         config_class="llama_stack_provider_ragas.config.RagasProviderInlineConfig",
         module="llama_stack_provider_ragas.inline",

@@ -25,7 +25,8 @@ authors = [
 keywords = ["llama-stack", "ragas", "evaluation"]
 dependencies = [
     "setuptools-scm",
-    "llama-stack==0.2.23",
+    "llama-stack @ git+https://github.com/llamastack/llama-stack.git",
+    "llama-stack-client @ git+https://github.com/llamastack/llama-stack-client-python.git",
     "greenlet==3.2.4", # inline/files/localfs errors saying greenlet not found
     "ragas==0.3.0",
     "pandas==2.3.0",
@@ -84,8 +85,10 @@ ignore = [
     "C901",  # too complex
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.mypy]
-python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false

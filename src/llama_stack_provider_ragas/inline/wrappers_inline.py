@@ -3,7 +3,6 @@ import logging
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
-from llama_stack.apis.inference import EmbeddingTaskType
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 from ragas.run_config import RunConfig
@@ -39,12 +38,11 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
     async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed documents using Llama Stack inference API."""
         try:
-            response = await self.inference_api.embeddings(
-                model_id=self.embedding_model_id,
-                contents=texts,
-                task_type=EmbeddingTaskType.document,
+            response = await self.inference_api.openai_embeddings(
+                model=self.embedding_model_id,
+                input=texts,
             )
-            return response.embeddings  # type: ignore
+            return [data.embedding for data in response.data]  # type: ignore
         except Exception as e:
             logger.error(f"Document embedding failed: {str(e)}")
             raise
@@ -52,12 +50,11 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
     async def aembed_query(self, text: str) -> list[float]:
         """Embed query using Llama Stack inference API."""
         try:
-            response = await self.inference_api.embeddings(
-                model_id=self.embedding_model_id,
-                contents=[text],
-                task_type=EmbeddingTaskType.query,
+            response = await self.inference_api.openai_embeddings(
+                model=self.embedding_model_id,
+                input=text,
             )
-            return response.embeddings[0]  # type: ignore
+            return response.data[0].embedding  # type: ignore
         except Exception as e:
             logger.error(f"Query embedding failed: {str(e)}")
             raise
@@ -132,18 +129,6 @@ class LlamaStackInlineLLM(BaseRagasLLM):
             # Log the prompt if enabled
             self._log_prompt(prompt_text)
 
-            # Create sampling params for this generation
-            gen_sampling_params = self.sampling_params
-            if temperature is not None:
-                # Update temperature if provided
-                gen_sampling_params = (
-                    gen_sampling_params.copy()
-                    if hasattr(gen_sampling_params, "copy")
-                    else gen_sampling_params
-                )
-                if hasattr(gen_sampling_params, "temperature"):
-                    gen_sampling_params.temperature = temperature
-
             # Generate responses (handle multiple completions if n > 1)
             generations = []
             llm_output = {
@@ -152,27 +137,47 @@ class LlamaStackInlineLLM(BaseRagasLLM):
                 "provider": "llama_stack",
             }
 
+            # sampling params for this generation should be set via the benchmark config
+            # we will ignore the temperature and stop params passed in here
             for _ in range(n):
-                response = await self.inference_api.completion(
-                    model_id=self.model_id,
-                    content=prompt_text,
-                    sampling_params=gen_sampling_params,
+                response = await self.inference_api.openai_completion(
+                    model=self.model_id,
+                    prompt=prompt_text,
+                    max_tokens=self.sampling_params.max_tokens
+                    if self.sampling_params and self.sampling_params.max_tokens
+                    else None,
+                    temperature=(
+                        self.sampling_params.strategy.temperature
+                        if self.sampling_params
+                        and hasattr(self.sampling_params.strategy, "temperature")
+                        and self.sampling_params.strategy.temperature
+                        else None
+                    ),
+                    top_p=(
+                        self.sampling_params.strategy.top_p
+                        if self.sampling_params
+                        and hasattr(self.sampling_params.strategy, "top_p")
+                        and self.sampling_params.strategy.top_p
+                        else None
+                    ),
+                    stop=self.sampling_params.stop
+                    if self.sampling_params and self.sampling_params.stop
+                    else None,
                 )
+
+                # Extract text from OpenAI completion response
+                choice = response.choices[0] if response.choices else None
+                text = choice.text if choice else ""
 
                 # Store Llama Stack response info in llm_output
                 llama_stack_info = {
-                    "stop_reason": (
-                        response.stop_reason.value if response.stop_reason else None
-                    ),
-                    "content_length": len(response.content),
-                    "has_logprobs": response.logprobs is not None,
-                    "logprobs_count": (
-                        len(response.logprobs) if response.logprobs else 0
-                    ),
+                    "stop_reason": (choice.finish_reason if choice else None),
+                    "content_length": len(text),
+                    "has_logprobs": choice.logprobs is not None if choice else False,
                 }
                 llm_output["llama_stack_responses"].append(llama_stack_info)  # type: ignore
 
-                generations.append(Generation(text=response.content))
+                generations.append(Generation(text=text))
 
             return LLMResult(generations=[generations], llm_output=llm_output)
 
