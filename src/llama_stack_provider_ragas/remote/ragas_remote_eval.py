@@ -62,43 +62,51 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         self.config = config
         self.evaluation_jobs: dict[str, RagasEvaluationJob] = {}
         self.benchmarks: dict[str, Benchmark] = {}
-        try:
-            import kfp
+        self._kfp_client = None
 
-            token = self._get_token()
-            if not token:
-                raise RagasEvaluationError(
-                    "No token found. Please run `oc login` and try again."
+    @property
+    def kfp_client(self):
+        """Lazy-initialized KFP client. Deferred to eval runtime."""
+        if self._kfp_client is None:
+            try:
+                import kfp
+
+                token = self._get_token()
+                if not token:
+                    raise RagasEvaluationError(
+                        "No token found. Please run `oc login` and try again."
+                    )
+
+                # the kfp.Client handles the healthz endpoint poorly, run a pre-flight check manually
+                response = requests.get(
+                    f"{self.config.kubeflow_config.pipelines_endpoint}/apis/v2beta1/healthz",
+                    headers={
+                        "Accept": "application/json",
+                        "Authorization": f"Bearer {token}",
+                    },
+                    timeout=5,
                 )
+                response.raise_for_status()
 
-            # the kfp.Client handles the healthz endpoint poorly, run a pre-flight check manually
-            response = requests.get(
-                f"{self.config.kubeflow_config.pipelines_endpoint}/apis/v2beta1/healthz",
-                headers={
-                    "Accept": "application/json",
-                    "Authorization": f"Bearer {token}",
-                },
-                timeout=5,
-            )
-            response.raise_for_status()
-
-            self.kfp_client = kfp.Client(
-                host=self.config.kubeflow_config.pipelines_endpoint,
-                existing_token=token,
-            )
-        except ImportError as e:
-            raise RagasEvaluationError(
-                "Kubeflow Pipelines SDK not available. Install with: pip install .[remote]"
-            ) from e
-        except requests.exceptions.RequestException as e:
-            raise RagasEvaluationError(
-                f"Failed to connect to Kubeflow Pipelines server at {self.config.kubeflow_config.pipelines_endpoint}, "
-                "do you need a new token?"
-            ) from e
-        except Exception as e:
-            raise RagasEvaluationError(
-                "Failed to initialize Kubeflow Pipelines client."
-            ) from e
+                self._kfp_client = kfp.Client(
+                    host=self.config.kubeflow_config.pipelines_endpoint,
+                    existing_token=token,
+                )
+            except ImportError as e:
+                raise RagasEvaluationError(
+                    "Kubeflow Pipelines SDK not available. Install with: pip install .[remote]"
+                ) from e
+            except requests.exceptions.RequestException as e:
+                raise RagasEvaluationError(
+                    f"Failed to connect to Kubeflow Pipelines server at {self.config.kubeflow_config.pipelines_endpoint}, "
+                    "do you need a new token?"
+                ) from e
+            except Exception as e:
+                raise RagasEvaluationError(
+                    "Failed to initialize Kubeflow Pipelines client."
+                ) from e
+        
+        return self._kfp_client
 
     def _get_token(self) -> str:
         try:
