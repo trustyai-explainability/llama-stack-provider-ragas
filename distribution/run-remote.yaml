@@ -21,6 +21,7 @@ providers:
           namespace: ${env.KUBEFLOW_NAMESPACE}
           llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
           base_image: ${env.KUBEFLOW_BASE_IMAGE}
+          kube_token: ${env.KUBEFLOW_KUBE_TOKEN:=}
   datasetio:
     - provider_id: localfs
       provider_type: inline::localfs
