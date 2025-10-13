@@ -105,7 +105,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
                 raise RagasEvaluationError(
                     "Failed to initialize Kubeflow Pipelines client."
                 ) from e
-        
+
         return self._kfp_client
 
     def _get_token(self) -> str:
