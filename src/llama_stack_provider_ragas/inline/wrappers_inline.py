@@ -3,6 +3,7 @@ import logging
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
+from llama_stack.apis.inference import SamplingParams, TopPSamplingStrategy
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 from ragas.run_config import RunConfig
@@ -42,7 +43,7 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
                 model=self.embedding_model_id,
                 input=texts,
             )
-            return [data.embedding for data in response.data]  # type: ignore
+            return [data.embedding for data in response.data]
         except Exception as e:
             logger.error(f"Document embedding failed: {str(e)}")
             raise
@@ -67,7 +68,7 @@ class LlamaStackInlineLLM(BaseRagasLLM):
         self,
         inference_api,
         model_id: str,
-        sampling_params,
+        sampling_params: SamplingParams | None = None,
         run_config: RunConfig = RunConfig(),
         multiple_completion_supported: bool = True,
     ):
@@ -75,31 +76,6 @@ class LlamaStackInlineLLM(BaseRagasLLM):
         self.inference_api = inference_api
         self.model_id = model_id
         self.sampling_params = sampling_params
-        self.enable_prompt_logging = True
-        self.prompt_counter = 0
-
-    def _estimate_tokens(self, text: str) -> int:
-        """Estimate token count for a given text.
-
-        This is a rough estimation - for accurate counts, you'd need the actual tokenizer.
-        """
-        # Rough estimation: ~4 characters per token for English text
-        return len(text) // 4
-
-    def _log_prompt(self, prompt_text: str, prompt_type: str = "evaluation") -> None:
-        """Log prompt details if enabled."""
-        if not self.enable_prompt_logging:
-            return
-
-        self.prompt_counter += 1
-        estimated_tokens = self._estimate_tokens(prompt_text)
-
-        logger.info(f"=== RAGAS PROMPT #{self.prompt_counter} ({prompt_type}) ===")
-        logger.info(f"Estimated tokens: {estimated_tokens}")
-        logger.info(f"Character count: {len(prompt_text)}")
-        logger.info(f"Prompt preview: {prompt_text[:200]}...")
-        logger.info(f"Full prompt:\n{prompt_text}")
-        logger.info("=" * 50)
 
     def generate_text(
         self,
@@ -123,13 +99,6 @@ class LlamaStackInlineLLM(BaseRagasLLM):
     ) -> LLMResult:
         """Asynchronous text generation using Llama Stack inference API."""
         try:
-            # Convert PromptValue to string
-            prompt_text = prompt.to_string()
-
-            # Log the prompt if enabled
-            self._log_prompt(prompt_text)
-
-            # Generate responses (handle multiple completions if n > 1)
             generations = []
             llm_output = {
                 "llama_stack_responses": [],
@@ -142,28 +111,23 @@ class LlamaStackInlineLLM(BaseRagasLLM):
             for _ in range(n):
                 response = await self.inference_api.openai_completion(
                     model=self.model_id,
-                    prompt=prompt_text,
+                    prompt=prompt.to_string(),
                     max_tokens=self.sampling_params.max_tokens
-                    if self.sampling_params and self.sampling_params.max_tokens
+                    if self.sampling_params
                     else None,
-                    temperature=(
-                        self.sampling_params.strategy.temperature
-                        if self.sampling_params
-                        and hasattr(self.sampling_params.strategy, "temperature")
-                        and self.sampling_params.strategy.temperature
-                        else None
-                    ),
-                    top_p=(
-                        self.sampling_params.strategy.top_p
-                        if self.sampling_params
-                        and hasattr(self.sampling_params.strategy, "top_p")
-                        and self.sampling_params.strategy.top_p
-                        else None
-                    ),
-                    stop=self.sampling_params.stop
-                    if self.sampling_params and self.sampling_params.stop
+                    temperature=self.sampling_params.strategy.temperature
+                    if self.sampling_params
+                    and isinstance(self.sampling_params.strategy, TopPSamplingStrategy)
                     else None,
+                    top_p=self.sampling_params.strategy.top_p
+                    if self.sampling_params
+                    and isinstance(self.sampling_params.strategy, TopPSamplingStrategy)
+                    else None,
+                    stop=self.sampling_params.stop if self.sampling_params else None,
                 )
+
+                if not response.choices:
+                    logger.warning("Completion response returned no choices")
 
                 # Extract text from OpenAI completion response
                 choice = response.choices[0] if response.choices else None
@@ -184,10 +148,6 @@ class LlamaStackInlineLLM(BaseRagasLLM):
         except Exception as e:
             logger.error(f"LLM generation failed: {str(e)}")
             raise
-
-    def get_temperature(self, n: int) -> float:
-        """Get temperature based on number of completions."""
-        return 0.3 if n > 1 else 1e-8
 
     # TODO: revisit this
     # def is_finished(self, response: LLMResult) -> bool:
