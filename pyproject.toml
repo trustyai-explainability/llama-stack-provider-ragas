@@ -25,8 +25,8 @@ authors = [
 keywords = ["llama-stack", "ragas", "evaluation"]
 dependencies = [
     "setuptools-scm",
-    "llama-stack @ git+https://github.com/llamastack/llama-stack.git",
-    "llama-stack-client @ git+https://github.com/llamastack/llama-stack-client-python.git",
+    "llama-stack==0.2.23",
+    "llama-stack-client==0.2.23",
     "greenlet==3.2.4", # inline/files/localfs errors saying greenlet not found
     "ragas==0.3.0",
     "pandas<2.3.0",

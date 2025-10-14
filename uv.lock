@@ -1414,7 +1414,7 @@ wheels = [
 [[package]]
 name = "llama-stack"
 version = "0.2.23"
-source = { git = "https://github.com/llamastack/llama-stack.git#26fd5dbd34ec3cea1ca3bc0da6f30513a8c55ac9" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiosqlite" },
@@ -1437,17 +1437,20 @@ dependencies = [
     { name = "python-jose", extra = ["cryptography"] },
     { name = "python-multipart" },
     { name = "rich" },
-    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "starlette" },
     { name = "termcolor" },
     { name = "tiktoken" },
     { name = "uvicorn" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/d1/39838d16c3f1fa459f3fb2e171908082be2dcf885405c93c23d3b7fd8a83/llama_stack-0.2.23.tar.gz", hash = "sha256:464d29c1ae3989fce2226513c9c18648f6236cbf5a399d3cf3a6b3dc4435be8c", size = 3331049, upload-time = "2025-09-26T21:11:16.86Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6d/b6/ad644dcd505c6e9bcc1dd256a08fca7bcd11c87684d68bf45f2a2f0028b9/llama_stack-0.2.23-py3-none-any.whl", hash = "sha256:43be14d97ca2fff77ca1e42241acb7945a67b7d183e9938bdb7159ee9610982a", size = 3662192, upload-time = "2025-09-26T21:11:15.291Z" },
+]
 
 [[package]]
 name = "llama-stack-client"
-version = "0.3.0a4"
-source = { git = "https://github.com/llamastack/llama-stack-client-python.git#43443fe86d23a2a7e7d4e753c2fecc364dea2f7c" }
+version = "0.2.23"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "click" },
@@ -1464,6 +1467,10 @@ dependencies = [
     { name = "termcolor" },
     { name = "tqdm" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/8f/306d5fcf2f97b3a6251219b03c194836a2ff4e0fcc8146c9970e50a72cd3/llama_stack_client-0.2.23.tar.gz", hash = "sha256:68f34e8ac8eea6a73ed9d4977d849992b2d8bd835804d770a11843431cd5bf74", size = 322288, upload-time = "2025-09-26T21:11:08.342Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/75/3eb58e092a681804013dbec7b7f549d18f55acf6fd6e6b27de7e249766d8/llama_stack_client-0.2.23-py3-none-any.whl", hash = "sha256:eee42c74eee8f218f9455e5a06d5d4be43f8a8c82a7937ef51ce367f916df847", size = 379809, upload-time = "2025-09-26T21:11:06.856Z" },
 ]
 
 [[package]]
@@ -1523,8 +1530,8 @@ requires-dist = [
     { name = "kfp", marker = "extra == 'remote'", specifier = ">=2.5.0" },
     { name = "kfp-kubernetes", marker = "extra == 'remote'", specifier = ">=2.0.0" },
     { name = "kubernetes", marker = "extra == 'remote'", specifier = ">=30.0.0" },
-    { name = "llama-stack", git = "https://github.com/llamastack/llama-stack.git" },
-    { name = "llama-stack-client", git = "https://github.com/llamastack/llama-stack-client-python.git" },
+    { name = "llama-stack", specifier = "==0.2.23" },
+    { name = "llama-stack-client", specifier = "==0.2.23" },
     { name = "llama-stack-provider-ragas", extras = ["distro"], marker = "extra == 'dev'" },
     { name = "llama-stack-provider-ragas", extras = ["remote"], marker = "extra == 'dev'" },
     { name = "mypy", marker = "extra == 'dev'" },
@@ -2902,11 +2909,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fa/2e/677c17c5d6a004c3c45334ab1dbe7b7deb834430b282b8a0f75ae220c8eb/sqlalchemy-2.0.41-cp313-cp313-win32.whl", hash = "sha256:bfc9064f6658a3d1cadeaa0ba07570b83ce6801a1314985bf98ec9b95d74e15f", size = 2082420, upload-time = "2025-05-14T17:55:52.69Z" },
     { url = "https://files.pythonhosted.org/packages/e9/61/e8c1b9b6307c57157d328dd8b8348ddc4c47ffdf1279365a13b2b98b8049/sqlalchemy-2.0.41-cp313-cp313-win_amd64.whl", hash = "sha256:82ca366a844eb551daff9d2e6e7a9e5e76d2612c8564f58db6c19a726869c1df", size = 2108329, upload-time = "2025-05-14T17:55:54.495Z" },
     { url = "https://files.pythonhosted.org/packages/1c/fc/9ba22f01b5cdacc8f5ed0d22304718d2c758fce3fd49a5372b886a86f37c/sqlalchemy-2.0.41-py3-none-any.whl", hash = "sha256:57df5dc6fdb5ed1a88a1ed2195fd31927e705cad62dedd86b46972752a80f576", size = 1911224, upload-time = "2025-05-14T17:39:42.154Z" },
-]
-
-[package.optional-dependencies]
-asyncio = [
-    { name = "greenlet" },
 ]
 
 [[package]]
