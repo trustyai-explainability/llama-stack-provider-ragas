@@ -29,7 +29,7 @@ dependencies = [
     "llama-stack-client @ git+https://github.com/llamastack/llama-stack-client-python.git",
     "greenlet==3.2.4", # inline/files/localfs errors saying greenlet not found
     "ragas==0.3.0",
-    "pandas==2.3.0",
+    "pandas<2.3.0",
     "pyarrow==20.0.0",
     "requests==2.32.4",
 ]
