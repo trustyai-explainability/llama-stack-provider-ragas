@@ -5,9 +5,6 @@ from ragas.metrics import (
     faithfulness,
 )
 
-PROVIDER_ID_INLINE = "trustyai_ragas_inline"
-PROVIDER_ID_REMOTE = "trustyai_ragas_remote"
-
 METRIC_MAPPING = {
     metric_func.name: metric_func
     for metric_func in [
@@ -23,6 +20,7 @@ METRIC_MAPPING = {
         # "rouge_score": RougeScore(),
     ]
 }
+
 AVAILABLE_METRICS = list(METRIC_MAPPING.keys())
 
 # Kubeflow ConfigMap keys and defaults for base image resolution
