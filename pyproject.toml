@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llama-stack-provider-ragas"
-version = "0.3.3"
+version = "0.3.4"
 description = "Ragas evaluation as an out-of-tree Llama Stack provider"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -30,7 +30,7 @@ dependencies = [
     "ragas==0.3.0",
     "pandas<2.3.0",
     "pyarrow>=21.0.0",
-    "requests==2.32.4",
+    "requests>=2.32.5",
     "datasets>=2.16.0",
 ]
 
