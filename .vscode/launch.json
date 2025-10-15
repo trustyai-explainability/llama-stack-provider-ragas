@@ -4,12 +4,23 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "Debug Ragas Distribution",
+            "name": "Debug Ragas Distribution -- Remote",
             "type": "debugpy",
             "request": "launch",
             "module": "llama_stack.cli.llama",
-            "args": ["stack", "run", "distribution/run.yaml"],
+            "args": ["stack", "run", "distribution/run-remote.yaml"],
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Ragas Distribution -- Inline",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "llama_stack.cli.llama",
+            "args": ["stack", "run", "distribution/run-inline.yaml"],
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "justMyCode": false
