@@ -143,6 +143,9 @@ KUBEFLOW_NAMESPACE=<your-namespace>
 # Container image for remote execution
 KUBEFLOW_BASE_IMAGE=quay.io/diegosquayorg/my-ragas-provider-image:latest
 
+# Authentication token for Kubeflow Pipelines
+KUBEFLOW_PIPELINES_TOKEN=<your-pipelines-token>
+
 # S3 configuration for storing evaluation results
 KUBEFLOW_RESULTS_S3_PREFIX=s3://my-bucket/ragas-results
 KUBEFLOW_S3_CREDENTIALS_SECRET_NAME=<secret-name>
@@ -169,6 +172,9 @@ The name of the data science project where the Kubeflow Pipelines server is runn
 
 `KUBEFLOW_BASE_IMAGE`::
 The container image used to run the Ragas evaluation in the remote provider. See the `Containerfile` in the repository root for details on building a custom image.
+
+`KUBEFLOW_PIPELINES_TOKEN`::
+Kubeflow Pipelines token with access to submit pipelines. If not provided, the token will be read from the local kubeconfig file. This token is used to authenticate with the Kubeflow Pipelines API for pipeline submission and monitoring.
 
 `KUBEFLOW_RESULTS_S3_PREFIX`::
 The S3 location (bucket and prefix) where evaluation results will be stored. This should be a folder path, e.g., `s3://my-bucket/ragas-results`. The remote provider will write evaluation outputs to this location.
@@ -207,6 +213,7 @@ eval:
         namespace: ${env.KUBEFLOW_NAMESPACE}
         llama_stack_url: ${env.KUBEFLOW_LLAMA_STACK_URL}
         base_image: ${env.KUBEFLOW_BASE_IMAGE}
+        pipelines_token: ${env.KUBEFLOW_PIPELINES_TOKEN:=}
 ----
 
 To run with the sample distribution:
