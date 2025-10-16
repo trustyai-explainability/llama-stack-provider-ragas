@@ -71,7 +71,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             try:
                 import kfp
 
-                token = self._get_kube_token()
+                token = self._get_kfp_token()
                 if not token:
                     raise RagasEvaluationError(
                         "No token found. Please run `oc login` and try again."
@@ -108,10 +108,10 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
 
         return self._kfp_client
 
-    def _get_kube_token(self) -> str:
-        if self.config.kubeflow_config.kube_token:
-            logger.info("Using KUBEFLOW_KUBE_TOKEN from config")
-            return self.config.kubeflow_config.kube_token
+    def _get_kfp_token(self) -> str:
+        if self.config.kubeflow_config.pipelines_token:
+            logger.info("Using KUBEFLOW_PIPELINES_TOKEN from config")
+            return self.config.kubeflow_config.pipelines_token
 
         try:
             from .kubeflow.utils import _load_kube_config

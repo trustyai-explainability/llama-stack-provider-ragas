@@ -112,9 +112,9 @@ class KubeflowConfig(BaseModel):
         default=None,
     )
 
-    kube_token: str | None = Field(
+    pipelines_token: str | None = Field(
         description=(
-            "Kubeflow Pipelines token for Kubeflow pipeline execution. "
+            "Kubeflow Pipelines token with access to submit pipelines. "
             "If not provided via env var, the token will be read from the local kubeconfig file."
         ),
         default=None,
