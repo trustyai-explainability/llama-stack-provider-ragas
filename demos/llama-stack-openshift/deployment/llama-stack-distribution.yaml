@@ -2,20 +2,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: remote-ragas-config
+  name: kubeflow-ragas-config
+  namespace: default
 data:
-  KUBEFLOW_PIPELINES_ENDPOINT: <your-kubeflow-pipelines-endpoint> # See project README.md for details
-  KUBEFLOW_NAMESPACE: <your-kubeflow-namespace> # See project README.md for details
-  KUBEFLOW_BASE_IMAGE: <your-kubeflow-base-image> # See project README.md for details
-  LLAMA_STACK_URL: "http://lsd-ragas-example-service:8321" # must match the distribution's service name by default it is <distribution-name>-service
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: kube-token-secret
-type: Opaque
-stringData:
-  kube-token: <your-kube-token>
+  EMBEDDING_MODEL: "all-MiniLM-L6-v2"
+  KUBEFLOW_LLAMA_STACK_URL: "<your-llama-stack-url>"
+  KUBEFLOW_PIPELINES_ENDPOINT: "<your-kfp-endpoint>"
+  KUBEFLOW_NAMESPACE: "<your-namespace>"
+  KUBEFLOW_BASE_IMAGE: "quay.io/diegosquayorg/my-ragas-provider-image:latest"
+  KUBEFLOW_RESULTS_S3_PREFIX: "s3://my-bucket/ragas-results"
+  KUBEFLOW_S3_CREDENTIALS_SECRET_NAME: "<secret-name>"
 ---
 apiVersion: llamastack.io/v1alpha1
 kind: LlamaStackDistribution
@@ -67,33 +63,51 @@ spec:
           valueFrom:
             configMapKeyRef:
               key: KUBEFLOW_PIPELINES_ENDPOINT
-              name: remote-ragas-config
+              name: kubeflow-ragas-config
               optional: true
         - name: KUBEFLOW_NAMESPACE
           valueFrom:
             configMapKeyRef:
               key: KUBEFLOW_NAMESPACE
-              name: remote-ragas-config
+              name: kubeflow-ragas-config
               optional: true
         - name: KUBEFLOW_BASE_IMAGE
           valueFrom:
             configMapKeyRef:
               key: KUBEFLOW_BASE_IMAGE
-              name: remote-ragas-config
+              name: kubeflow-ragas-config
               optional: true
-        - name: KUBE_TOKEN # Required for using the Llama Stack Distribution method to run the Ragas evaluation
-          valueFrom:
-            secretKeyRef:
-              key: kube-token
-              name: kube-token-secret
-              optional: true
-        - name: LLAMA_STACK_URL
+        - name: KUBEFLOW_LLAMA_STACK_URL
           valueFrom:
             configMapKeyRef:
-              key: LLAMA_STACK_URL
-              name: remote-ragas-config
-              optional: false
+              key: KUBEFLOW_LLAMA_STACK_URL
+              name: kubeflow-ragas-config
+              optional: true
+        - name: KUBEFLOW_RESULTS_S3_PREFIX
+          valueFrom:
+            configMapKeyRef:
+              key: KUBEFLOW_RESULTS_S3_PREFIX
+              name: kubeflow-ragas-config
+              optional: true
+        - name: KUBEFLOW_S3_CREDENTIALS_SECRET_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: KUBEFLOW_S3_CREDENTIALS_SECRET_NAME
+              name: kubeflow-ragas-config
+              optional: true
+        - name: EMBEDDING_MODEL
+          valueFrom:
+            configMapKeyRef:
+              key: EMBEDDING_MODEL
+              name: kubeflow-ragas-config
+              optional: true
+        - name: KUBEFLOW_PIPELINES_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: KUBEFLOW_PIPELINES_TOKEN
+              name: kubeflow-pipelines-token
+              optional: true
       name: llama-stack
       port: 8321
     distribution:
-      image: <your-distribution-image> # See BUILD_DISTRO.md for details
+      name: rh-dev
