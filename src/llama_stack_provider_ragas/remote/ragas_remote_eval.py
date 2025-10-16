@@ -71,7 +71,7 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
             try:
                 import kfp
 
-                token = self._get_token()
+                token = self._get_kfp_token()
                 if not token:
                     raise RagasEvaluationError(
                         "No token found. Please run `oc login` and try again."
@@ -108,14 +108,16 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
 
         return self._kfp_client
 
-    def _get_token(self) -> str:
-        try:
-            from kubernetes.client.configuration import Configuration
-            from kubernetes.config.kube_config import load_kube_config
+    def _get_kfp_token(self) -> str:
+        if self.config.kubeflow_config.pipelines_token:
+            logger.info("Using KUBEFLOW_PIPELINES_TOKEN from config")
+            return self.config.kubeflow_config.pipelines_token
 
-            config = Configuration()
-            load_kube_config(client_configuration=config)
-            token = str(config.api_key["authorization"].split(" ")[-1])
+        try:
+            from .kubeflow.utils import _load_kube_config
+
+            kube_config = _load_kube_config()
+            token = str(kube_config.api_key["authorization"].split(" ")[-1])
         except ImportError as e:
             raise RagasEvaluationError(
                 "Kubernetes client is not installed. Install with: pip install .[remote]"
