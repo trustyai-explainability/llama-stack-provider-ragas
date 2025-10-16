@@ -1,38 +1,32 @@
+import logging
+import os
 from typing import List  # noqa
 
 from dotenv import load_dotenv
 from kfp import dsl
+from kubernetes import client
+from kubernetes.client.exceptions import ApiException
+
+from ...constants import (
+    DEFAULT_RAGAS_PROVIDER_IMAGE,
+    KUBEFLOW_CANDIDATE_NAMESPACES,
+    RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
+    RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
+)
+from .utils import _load_kube_config
 
 load_dotenv()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def get_base_image() -> str:
     """Get base image from env, fallback to k8s ConfigMap, fallback to default image."""
 
-    import logging
-    import os
-
-    from kubernetes import client, config
-    from kubernetes.client.exceptions import ApiException
-
-    from llama_stack_provider_ragas.constants import (
-        DEFAULT_RAGAS_PROVIDER_IMAGE,
-        KUBEFLOW_CANDIDATE_NAMESPACES,
-        RAGAS_PROVIDER_IMAGE_CONFIGMAP_KEY,
-        RAGAS_PROVIDER_IMAGE_CONFIGMAP_NAME,
-    )
-
     if (base_image := os.environ.get("KUBEFLOW_BASE_IMAGE")) is not None:
         return base_image
 
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-    try:
-        config.load_incluster_config()
-    except config.ConfigException:
-        config.load_kube_config()
-
+    _load_kube_config()
     api = client.CoreV1Api()
 
     for candidate_namespace in KUBEFLOW_CANDIDATE_NAMESPACES:
