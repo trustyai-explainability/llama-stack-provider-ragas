@@ -107,15 +107,15 @@ class KubeflowConfig(BaseModel):
         description=(
             "Base image for Kubeflow pipeline components. "
             "If not provided via env var, the image name will be read from a ConfigMap specified in constants.py."
-            "NOTE: this field is accessed via env var, but is here for completeness.",
+            "NOTE: this field is accessed via env var, but is here for completeness."
         ),
         default=None,
     )
 
     kube_token: str | None = Field(
         description=(
-            "Kubernetes token for Kubeflow pipeline execution. ",
-            "If not provided via env var, the token will be read from the local kubeconfig file.",
+            "Kubeflow Pipelines token for Kubeflow pipeline execution. "
+            "If not provided via env var, the token will be read from the local kubeconfig file."
         ),
         default=None,
     )
