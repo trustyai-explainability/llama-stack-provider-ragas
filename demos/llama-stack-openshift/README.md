@@ -4,7 +4,7 @@
 * OpenShift AI or Open Data Hub installed on your OpenShift Cluster
 * Data Science Pipeline Server configured
 * Llama Stack Operator installed
-* A VLLM hosted Model either through Kserve or MaaS. You can follow these [docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_cloud_service/1/html/working_with_rag/deploying-a-rag-stack-in-a-data-science-project_rag#Deploying-a-llama-model-with-kserve_rag) until step 3.4 
+* A VLLM hosted Model either through Kserve or MaaS. You can follow these [docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_cloud_service/1/html/working_with_rag/deploying-a-rag-stack-in-a-data-science-project_rag#Deploying-a-llama-model-with-kserve_rag) until step 3.4
 
 ## Setup
 Create a secret for storing your model's information.
@@ -24,7 +24,7 @@ oc create secret generic llama-stack-inference-model-secret \
 ## Setup Deployment files
 ### Configuring the `kubeflow-ragas-config` ConfigMap
 Update the [kubeflow-ragas-config](deployment/llama-stack-distribution.yaml) with the following data:
-``` bash 
+``` bash
 # See project README for more details
 EMBEDDING_MODEL=all-MiniLM-L6-v2
 KUBEFLOW_LLAMA_STACK_URL=<your-llama-stack-url>
@@ -35,11 +35,11 @@ KUBEFLOW_RESULTS_S3_PREFIX=s3://my-bucket/ragas-results
 KUBEFLOW_S3_CREDENTIALS_SECRET_NAME=<secret-name>
 ```
 
-> [!NOTE]  
-> The `KUBEFLOW_LLAMA_STACK_URL` must be an external route. 
+> [!NOTE]
+> The `KUBEFLOW_LLAMA_STACK_URL` must be an external route.
 
 ### Configuring the `pipelines_token` Secret
-Unfortunately the Llama Stack distribution service account does not have privilages to create pipeline runs. In order to work around this we must provide a user token as a secret to the Llama Stack Distribution. 
+Unfortunately the Llama Stack distribution service account does not have privilages to create pipeline runs. In order to work around this we must provide a user token as a secret to the Llama Stack Distribution.
 
 Create the secret with:
 ``` bash
