@@ -3,6 +3,8 @@
 import pytest
 from ragas.metrics import answer_relevancy
 
+from llama_stack_provider_ragas.constants import PROVIDER_ID_INLINE
+
 # mark as integration, see tool.pytest.ini_options in pyproject.toml
 pytestmark = pytest.mark.integration_test
 
@@ -34,7 +36,7 @@ def test_single_metric_evaluation(
         benchmark_id=benchmark_id,
         dataset_id=dataset_id,
         scoring_functions=[metric_to_test.name],
-        provider_id="trustyai_ragas",
+        provider_id=PROVIDER_ID_INLINE,
     )
 
     job = lls_client.eval.run_eval(
