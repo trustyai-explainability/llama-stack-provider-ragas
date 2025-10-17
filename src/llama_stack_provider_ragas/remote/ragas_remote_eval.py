@@ -109,9 +109,9 @@ class RagasEvaluatorRemote(Eval, BenchmarksProtocolPrivate):
         return self._kfp_client
 
     def _get_kfp_token(self) -> str:
-        if self.config.kubeflow_config.pipelines_token:
+        if self.config.kubeflow_config.pipelines_api_token:
             logger.info("Using KUBEFLOW_PIPELINES_TOKEN from config")
-            return self.config.kubeflow_config.pipelines_token
+            return self.config.kubeflow_config.pipelines_api_token.get_secret_value()
 
         try:
             from .kubeflow.utils import _load_kube_config
