@@ -52,4 +52,4 @@ kubectl create secret generic kubeflow-pipelines-token \
 You can now deploy the configuration files and the Llama Stack distribution with `oc apply -f deployment/kubeflow-ragas-config.yaml` and `oc apply -f deployment/llama-stack-distribution.yaml`
 
 You should now have a Llama Stack server on OpenShift with the remote ragas eval provider configured.
-You can now follow the [remote_demo.ipynb](../../demos/remote_demo.ipynb) demo but ensure you are running it in a Data Science workbench and use the `LLAMA_STACK_URL` defined earlier. Alternatively you can run it locally if you create a Route.
+You can now follow the remote instructions of the [basic_demo.ipynb](../../demos/basic_demo.ipynb) demo but ensure you are running it in a Data Science workbench and use the `LLAMA_STACK_URL` defined earlier. Alternatively you can run it locally if you create a Route.
