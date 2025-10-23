@@ -33,11 +33,11 @@ class RagasProviderBaseConfig(BaseModel):
 
     # Looking for the model?
     # It's in the benchmark config's eval_candidate.
-    # You set it as part of the call to `client.eval.run_eval`.
+    # You set it as part of the call to `client.alpha.eval.run_eval`.
 
     # Looking for the sampling params?
     # It's in the benchmark config's eval_candidate.
-    # You set them as part of the call to `client.eval.run_eval`.
+    # You set them as part of the call to `client.alpha.eval.run_eval`.
 
     # Looking for the dataset?
     # It's in the benchmark config's dataset_id.

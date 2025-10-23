@@ -35,7 +35,7 @@ def model():
 
 @pytest.fixture
 def embedding_model():
-    return "all-MiniLM-L6-v2"
+    return "ollama/all-minilm:latest"
 
 
 @pytest.fixture
