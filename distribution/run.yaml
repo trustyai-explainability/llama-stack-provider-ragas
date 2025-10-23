@@ -23,7 +23,7 @@ providers:
           pipelines_api_token: ${env.KUBEFLOW_PIPELINES_TOKEN:=}
         kvstore:
           namespace: ragas
-          backend: kv_default          
+          backend: kv_default
     - provider_id: ${env.EMBEDDING_MODEL:+trustyai_ragas_inline}
       provider_type: inline::trustyai_ragas
       module: llama_stack_provider_ragas.inline
