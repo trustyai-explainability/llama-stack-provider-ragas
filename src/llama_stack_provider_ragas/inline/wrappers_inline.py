@@ -3,7 +3,12 @@ import logging
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
-from llama_stack.apis.inference import SamplingParams, TopPSamplingStrategy
+from llama_stack.apis.inference import (
+    OpenAICompletionRequestWithExtraBody,
+    OpenAIEmbeddingsRequestWithExtraBody,
+    SamplingParams,
+    TopPSamplingStrategy,
+)
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 from ragas.run_config import RunConfig
@@ -39,10 +44,11 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
     async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed documents using Llama Stack inference API."""
         try:
-            response = await self.inference_api.openai_embeddings(
+            request = OpenAIEmbeddingsRequestWithExtraBody(
                 model=self.embedding_model_id,
                 input=texts,
             )
+            response = await self.inference_api.openai_embeddings(request)
             return [data.embedding for data in response.data]
         except Exception as e:
             logger.error(f"Document embedding failed: {str(e)}")
@@ -51,10 +57,11 @@ class LlamaStackInlineEmbeddings(BaseRagasEmbeddings):
     async def aembed_query(self, text: str) -> list[float]:
         """Embed query using Llama Stack inference API."""
         try:
-            response = await self.inference_api.openai_embeddings(
+            request = OpenAIEmbeddingsRequestWithExtraBody(
                 model=self.embedding_model_id,
                 input=text,
             )
+            response = await self.inference_api.openai_embeddings(request)
             return response.data[0].embedding  # type: ignore
         except Exception as e:
             logger.error(f"Query embedding failed: {str(e)}")
@@ -109,7 +116,7 @@ class LlamaStackInlineLLM(BaseRagasLLM):
             # sampling params for this generation should be set via the benchmark config
             # we will ignore the temperature and stop params passed in here
             for _ in range(n):
-                response = await self.inference_api.openai_completion(
+                request = OpenAICompletionRequestWithExtraBody(
                     model=self.model_id,
                     prompt=prompt.to_string(),
                     max_tokens=self.sampling_params.max_tokens
@@ -125,6 +132,7 @@ class LlamaStackInlineLLM(BaseRagasLLM):
                     else None,
                     stop=self.sampling_params.stop if self.sampling_params else None,
                 )
+                response = await self.inference_api.openai_completion(request)
 
                 if not response.choices:
                     logger.warning("Completion response returned no choices")
