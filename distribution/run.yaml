@@ -93,5 +93,3 @@ registered_resources:
   tool_groups: []
 server:
   port: 8321
-telemetry:
-  enabled: true
