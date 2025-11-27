@@ -85,11 +85,11 @@ def run_ragas_evaluation(
     import logging
 
     import pandas as pd
-    from llama_stack.apis.inference import SamplingParams
     from ragas import EvaluationDataset, evaluate
     from ragas.dataset_schema import EvaluationResult
     from ragas.run_config import RunConfig
 
+    from llama_stack_provider_ragas.compat import SamplingParams
     from llama_stack_provider_ragas.constants import METRIC_MAPPING
     from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
     from llama_stack_provider_ragas.remote.wrappers_remote import (

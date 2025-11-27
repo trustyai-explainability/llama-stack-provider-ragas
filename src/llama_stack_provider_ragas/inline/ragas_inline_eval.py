@@ -3,14 +3,6 @@ import functools as ft
 import logging
 from typing import Any
 
-from llama_stack.apis.benchmarks import Benchmark
-from llama_stack.apis.common.job_types import Job, JobStatus
-from llama_stack.apis.datasetio import DatasetIO
-from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
-from llama_stack.apis.inference import Inference
-from llama_stack.apis.scoring import ScoringResult
-from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
-from llama_stack.schema_utils import json_schema_type
 from ragas import EvaluationDataset
 from ragas import evaluate as ragas_evaluate
 from ragas.metrics import (
@@ -22,6 +14,19 @@ from ragas.metrics import (
 )
 from ragas.run_config import RunConfig
 
+from ..compat import (
+    Benchmark,
+    BenchmarkConfig,
+    BenchmarksProtocolPrivate,
+    DatasetIO,
+    Eval,
+    EvaluateResponse,
+    Inference,
+    Job,
+    JobStatus,
+    ScoringResult,
+    json_schema_type,
+)
 from ..config import RagasProviderInlineConfig
 from ..constants import METRIC_MAPPING
 from ..errors import RagasEvaluationError
