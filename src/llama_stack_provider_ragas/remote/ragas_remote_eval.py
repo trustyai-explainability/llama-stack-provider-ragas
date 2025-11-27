@@ -4,14 +4,19 @@ from typing import Any
 
 import pandas as pd
 import requests
-from llama_stack.apis.benchmarks import Benchmark
-from llama_stack.apis.common.job_types import Job, JobStatus
-from llama_stack.apis.eval import BenchmarkConfig, Eval, EvaluateResponse
-from llama_stack.apis.scoring import ScoringResult
-from llama_stack.providers.datatypes import BenchmarksProtocolPrivate
-from llama_stack.schema_utils import json_schema_type
 from pydantic import BaseModel
 
+from ..compat import (
+    Benchmark,
+    BenchmarkConfig,
+    BenchmarksProtocolPrivate,
+    Eval,
+    EvaluateResponse,
+    Job,
+    JobStatus,
+    ScoringResult,
+    json_schema_type,
+)
 from ..config import (
     KubeflowConfig,
     RagasConfig,

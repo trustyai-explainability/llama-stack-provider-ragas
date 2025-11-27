@@ -3,15 +3,16 @@ import logging
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
-from llama_stack.apis.inference import (
+from ragas.embeddings.base import BaseRagasEmbeddings
+from ragas.llms.base import BaseRagasLLM
+from ragas.run_config import RunConfig
+
+from ..compat import (
     OpenAICompletionRequestWithExtraBody,
     OpenAIEmbeddingsRequestWithExtraBody,
     SamplingParams,
     TopPSamplingStrategy,
 )
-from ragas.embeddings.base import BaseRagasEmbeddings
-from ragas.llms.base import BaseRagasLLM
-from ragas.run_config import RunConfig
 
 logger = logging.getLogger(__name__)
 

@@ -3,10 +3,10 @@ from datetime import datetime
 
 import pytest
 from dotenv import load_dotenv
-from llama_stack.apis.inference import SamplingParams, TopPSamplingStrategy
 from llama_stack_client import LlamaStackClient
 from ragas import EvaluationDataset
 
+from llama_stack_provider_ragas.compat import SamplingParams, TopPSamplingStrategy
 from llama_stack_provider_ragas.config import (
     KubeflowConfig,
     RagasProviderInlineConfig,

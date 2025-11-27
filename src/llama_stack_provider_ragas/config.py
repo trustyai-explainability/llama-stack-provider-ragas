@@ -1,5 +1,6 @@
-from llama_stack.schema_utils import json_schema_type
 from pydantic import BaseModel, Field, SecretStr
+
+from .compat import json_schema_type
 
 
 class RagasConfig(BaseModel):
