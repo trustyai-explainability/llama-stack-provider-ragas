@@ -2,13 +2,14 @@ import logging
 
 from langchain_core.language_models.llms import Generation, LLMResult
 from langchain_core.prompt_values import PromptValue
-from llama_stack.apis.inference import SamplingParams, TopPSamplingStrategy
 from llama_stack_client import AsyncLlamaStackClient, LlamaStackClient, omit
 from llama_stack_client.types.completion_create_response import CompletionCreateResponse
 from llama_stack_client.types.create_embeddings_response import CreateEmbeddingsResponse
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 from ragas.run_config import RunConfig
+
+from ..compat import SamplingParams, TopPSamplingStrategy
 
 logger = logging.getLogger(__name__)
 

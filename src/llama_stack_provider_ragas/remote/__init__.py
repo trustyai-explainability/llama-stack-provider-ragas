@@ -1,7 +1,6 @@
 from typing import Any
 
-from llama_stack.apis.datatypes import Api
-
+from ..compat import Api
 from ..config import RagasProviderRemoteConfig
 from .ragas_remote_eval import RagasEvaluatorRemote
 

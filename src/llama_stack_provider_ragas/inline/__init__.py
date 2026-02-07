@@ -1,7 +1,6 @@
 from typing import Any
 
-from llama_stack.apis.datatypes import Api
-
+from ..compat import Api
 from ..config import RagasProviderInlineConfig
 from .ragas_inline_eval import RagasEvaluatorInline
 

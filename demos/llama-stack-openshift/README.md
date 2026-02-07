@@ -4,7 +4,7 @@
 * OpenShift AI or Open Data Hub installed on your OpenShift Cluster
 * Data Science Pipeline Server configured
 * Llama Stack Operator installed
-* A VLLM hosted Model either through Kserve or MaaS. You can follow these [docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/2.25/html/working_with_llama_stack/deploying-a-rag-stack-in-a-data-science-project_rag#Deploying-a-llama-model-with-kserve_rag) until step 3.4
+* A VLLM hosted Model either through Kserve or MaaS. You can follow these [docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_cloud_service/1/html/working_with_llama_stack/deploying-a-rag-stack-in-a-data-science-project_rag) until step 3.4
 
 ## Setup
 Create a secret for storing your model's information.
@@ -52,4 +52,4 @@ kubectl create secret generic kubeflow-pipelines-token \
 You can now deploy the configuration files and the Llama Stack distribution with `oc apply -f deployment/kubeflow-ragas-config.yaml` and `oc apply -f deployment/llama-stack-distribution.yaml`
 
 You should now have a Llama Stack server on OpenShift with the remote ragas eval provider configured.
-You can now follow the [remote_demo.ipynb](../../demos/remote_demo.ipynb) demo but ensure you are running it in a Data Science workbench and use the `LLAMA_STACK_URL` defined earlier. Alternatively you can run it locally if you create a Route.
+You can now follow the remote instructions of the [basic_demo.ipynb](../../demos/basic_demo.ipynb) demo but ensure you are running it in a Data Science workbench and use the `LLAMA_STACK_URL` defined earlier. Alternatively you can run it locally if you create a Route.

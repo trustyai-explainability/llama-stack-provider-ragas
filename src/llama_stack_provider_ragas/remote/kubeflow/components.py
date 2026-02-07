@@ -56,7 +56,10 @@ def get_base_image() -> str:
         return DEFAULT_RAGAS_PROVIDER_IMAGE
 
 
-@dsl.component(base_image=get_base_image())
+@dsl.component(
+    base_image=get_base_image(),
+    packages_to_install=["llama-stack-provider-ragas[remote]"],
+)
 def retrieve_data_from_llama_stack(
     dataset_id: str,
     llama_stack_base_url: str,
@@ -72,7 +75,10 @@ def retrieve_data_from_llama_stack(
     df.to_json(output_dataset.path, orient="records", lines=True)
 
 
-@dsl.component(base_image=get_base_image())
+@dsl.component(
+    base_image=get_base_image(),
+    packages_to_install=["llama-stack-provider-ragas[remote]"],
+)
 def run_ragas_evaluation(
     model: str,
     sampling_params: dict,
@@ -81,15 +87,16 @@ def run_ragas_evaluation(
     llama_stack_base_url: str,
     input_dataset: dsl.Input[dsl.Dataset],
     result_s3_location: str,
+    results_s3_storage_options: dict,
 ):
     import logging
 
     import pandas as pd
-    from llama_stack.apis.inference import SamplingParams
     from ragas import EvaluationDataset, evaluate
     from ragas.dataset_schema import EvaluationResult
     from ragas.run_config import RunConfig
 
+    from llama_stack_provider_ragas.compat import SamplingParams
     from llama_stack_provider_ragas.constants import METRIC_MAPPING
     from llama_stack_provider_ragas.logging_utils import render_dataframe_as_table
     from llama_stack_provider_ragas.remote.wrappers_remote import (
@@ -134,4 +141,10 @@ def run_ragas_evaluation(
     logger.info(f"Ragas evaluation completed:\n{table_output}")
 
     logger.info(f"Saving results to {result_s3_location}")
-    df_output.to_json(result_s3_location, orient="records", lines=True)
+
+    df_output.to_json(
+        result_s3_location,
+        orient="records",
+        lines=True,
+        storage_options=results_s3_storage_options,
+    )
