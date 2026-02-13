@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ release/0.4.x ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ release/0.4.x ]
 
 env:
   PYTHON_VERSION: "3.12"
@@ -65,8 +65,7 @@ jobs:
       matrix:
         python-version: ["3.12"]
         llama-stack-version:
-          - "main"
-          - "0.4.0"
+          - "0.3.5"
 
     steps:
     - name: Checkout code
