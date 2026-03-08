@@ -17,6 +17,8 @@ There are two versions of the provider:
 - `inline`: runs the Ragas evaluation in the same process as the Llama Stack server. This is always available with the base installation.
 - `remote`: runs the Ragas evaluation in a remote process, using Kubeflow Pipelines. Only available when remote dependencies are installed with `pip install llama-stack-provider-ragas[remote]`.
 
+**EvalHub adapter** (standalone module, same container): the package also provides an EvalHub framework adapter in `llama_stack_provider_ragas.evalhub`. It is not part of the Llama Stack provider; EvalHub invokes it as the Job entrypoint (`ragas-evalhub-adapter`). Install with `pip install llama-stack-provider-ragas[evalhub]`. The same container image built from this repo can serve both the Llama Stack provider and EvalHub RAGAS jobs.
+
 ## Prerequisites
 - Python 3.12
 - [uv](https://docs.astral.sh/uv/)
